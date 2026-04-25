@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索报告 - TrendRadar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #1e293b;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .report-header {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .report-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .report-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.9;
+            flex-wrap: wrap;
+        }
+
+        .report-content {
+            padding: 40px;
+        }
+
+        .report-section {
+            margin-bottom: 40px;
+        }
+
+        .report-section h2 {
+            font-size: 20px;
+            color: #0f172a;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #00d4ff;
+        }
+
+        .search-criteria {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .criteria-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .criteria-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .criteria-label {
+            font-weight: 600;
+            color: #475569;
+            min-width: 100px;
+        }
+
+        .criteria-value {
+            color: #1e293b;
+        }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .summary-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .news-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .news-card:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+        }
+
+        .news-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+
+        .news-title a {
+            color: #0099cc;
+            text-decoration: none;
+        }
+
+        .news-title a:hover {
+            text-decoration: underline;
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .source-tag {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .time-tag {
+            color: #64748b;
+        }
+
+        .source-section {
+            margin-bottom: 30px;
+        }
+
+        .source-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .report-footer {
+            background: #f1f5f9;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .loading i {
+            font-size: 32px;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .report-container {
+                box-shadow: none;
+            }
+            .action-buttons {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .report-header {
+                padding: 20px;
+            }
+
+            .report-header h1 {
+                font-size: 24px;
+            }
+
+            .report-meta {
+                gap: 15px;
+                font-size: 12px;
+            }
+
+            .report-content {
+                padding: 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div id="report-content">
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>加载报告中... / Loading report...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getQueryParam(name) {
+            const url = new URL(window.location);
+            return url.searchParams.get(name);
+        }
+
+        function formatDate(dateStr) {
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleString('zh-CN');
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function renderReport(data) {
+            const container = document.getElementById('report-content');
+
+            const resultCount = Object.values(data.results).reduce((sum, items) => sum + items.length, 0);
+
+            let html = `
+                <div class="report-header">
+                    <h1><i class="fas fa-file-pdf"></i> 搜索报告</h1>
+                    <div class="report-meta">
+                        <div><strong>报告ID:</strong> ${data.id}</div>
+                        <div><strong>生成时间:</strong> ${formatDate(data.created_at)}</div>
+                        <div><strong>结果数:</strong> ${resultCount} 条</div>
+                    </div>
+                </div>
+
+                <div class="report-content">
+                    <div class="report-section">
+                        <h2><i class="fas fa-search"></i> 搜索条件</h2>
+                        <div class="search-criteria">
+                            <div class="criteria-item">
+                                <span class="criteria-label">关键词:</span>
+                                <span class="criteria-value">${data.keywords.join(' / ')}</span>
+                            </div>
+                            <div class="criteria-item">
+                                <span class="criteria-label">时间范围:</span>
+                                <span class="criteria-value">过去 ${data.days} 天</span>
+                            </div>
+                            <div class="criteria-item">
+                                <span class="criteria-label">结果数量:</span>
+                                <span class="criteria-value">${resultCount} 条</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="report-section">
+                        <h2><i class="fas fa-chart-bar"></i> 统计摘要</h2>
+                        <div class="results-summary">
+                            <div class="summary-card">
+                                <div class="number">${resultCount}</div>
+                                <div class="label">搜索结果</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="number">${Object.keys(data.results).length}</div>
+                                <div class="label">信息源</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="number">${data.days}</div>
+                                <div class="label">时间范围(天)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="report-section">
+                        <h2><i class="fas fa-newspaper"></i> 详细内容</h2>
+            `;
+
+            for (const [sourceId, items] of Object.entries(data.results)) {
+                html += `<div class="source-section">
+                    <div class="source-title">📰 ${sourceId} (${items.length} 条)</div>`;
+
+                items.forEach((item, idx) => {
+                    const title = item.title || 'Untitled';
+                    const url = item.url || '#';
+                    const source = item.source_name || sourceId;
+                    const timeDisplay = item.published_at ? formatDate(item.published_at) : '';
+
+                    const safeTitle = String(title).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeUrl = String(url).replace(/"/g, '&quot;');
+
+                    html += `
+                        <div class="news-card">
+                            <div class="news-title">
+                                <span style="color: #00d4ff; margin-right: 8px;">${(idx + 1).toString().padStart(2, '0')}</span>
+                                <a href="${safeUrl}" target="_blank">${safeTitle}</a>
+                            </div>
+                            <div class="news-meta">
+                                <span class="source-tag">${String(source).replace(/</g, '&lt;')}</span>
+                                ${timeDisplay ? `<span class="time-tag">🕒 ${timeDisplay}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            html += `
+                    </div>
+                </div>
+
+                <div class="report-footer">
+                    <p>本报告由 TrendRadar 自动生成 | Generated by TrendRadar</p>
+                    <p>报告ID: ${data.id} | 生成时间: ${formatDate(data.created_at)}</p>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="window.print()">
+                            <i class="fas fa-print"></i> 打印
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyShareLink()">
+                            <i class="fas fa-link"></i> 复制分享链接
+                        </button>
+                        <button class="btn btn-secondary" onclick="window.close()">
+                            <i class="fas fa-times"></i> 关闭
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function copyShareLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('分享链接已复制到剪贴板 / Share link copied to clipboard');
+            }).catch(() => {
+                alert('复制失败，请手动复制: ' + url);
+            });
+        }
+
+        function loadReport() {
+            const reportId = getQueryParam('id');
+            if (!reportId) {
+                document.getElementById('report-content').innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>缺少报告ID / Missing report ID</p>
+                    </div>
+                `;
+                return;
+            }
+
+            fetch('/api/report/' + reportId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        renderReport(data.data);
+                    } else {
+                        document.getElementById('report-content').innerHTML = `
+                            <div class="error">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <p>报告加载失败 / Failed to load report: ${data.error}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(e => {
+                    console.error('Error loading report:', e);
+                    document.getElementById('report-content').innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>网络或服务器错误 / Network or Server Error</p>
+                        </div>
+                    `;
+                });
+        }
+
+        window.addEventListener('load', loadReport);
+    </script>
+</body>
+</html>

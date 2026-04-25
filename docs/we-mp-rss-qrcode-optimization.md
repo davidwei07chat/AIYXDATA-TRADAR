@@ -30,7 +30,7 @@
 ```
 用户浏览器
     ↓
-https://werss.aiyxdatatop.us.ci (Cloudflare CDN)
+https://werss.aiyxtech.us.kg (Cloudflare CDN)
     ↓
 服务器 45.78.226.155:443 (NGINX)
     ↓
@@ -432,7 +432,7 @@ docker logs -f we-mp-rss 2>&1 | grep "二维码生成超时"
 
 | 项目 | 值 |
 |------|------|
-| 外部访问 | `https://werss.aiyxdatatop.us.ci` |
+| 外部访问 | `https://werss.aiyxtech.us.kg` |
 | 内部访问 | `http://127.0.0.1:8001` |
 | 默认用户名 | `admin` |
 | 默认密码 | `admin@123` |

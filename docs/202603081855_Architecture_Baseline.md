@@ -7,8 +7,8 @@ This document defines the stable architecture baseline for the TrendRadar projec
 ## Project Anchors / 项目锚点
 
 ### 1. Nginx Reverse Proxy / Nginx 反向代理
-- **Primary Domain / 主域名**: `aiyxdata_tradar.aiyxdatatop.us.ci`
-- **Configuration File / 配置文件**: `/etc/nginx/sites-available/aiyxdata_tradar.aiyxdatatop.us.ci.conf`
+- **Primary Domain / 主域名**: `aiyxdata_tradar.aiyxtech.us.kg`
+- **Configuration File / 配置文件**: `/etc/nginx/sites-available/aiyxdata_tradar.aiyxtech.us.kg.conf`
 - **Policy / 策略**:
   - `listen 80` must redirect to `443`.
   - `listen 443 ssl` handles primary traffic.

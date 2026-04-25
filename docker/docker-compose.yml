@@ -1,10 +1,14 @@
 services:
   aiyxdata_tradar:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        TARGETARCH: amd64
     image: wantcat/aiyxdata_tradar:latest
     container_name: aiyxdata_tradar
     restart: unless-stopped
 
-    ports:
     ports:
       - "127.0.0.1:8084:${WEBSERVER_PORT:-8080}"
 
@@ -14,11 +18,12 @@ services:
       - ../aiyxdata_tradar:/app/aiyxdata_tradar
       - ./manage.py:/app/manage.py
       - ./server.py:/app/server.py
+      - ./entrypoint.sh:/entrypoint.sh
 
     environment:
       - TZ=Asia/Shanghai
       # Web 服务器
-      - ENABLE_WEBSERVER=${ENABLE_WEBSERVER:-false}
+      - ENABLE_WEBSERVER=${ENABLE_WEBSERVER:-true}
       - WEBSERVER_PORT=${WEBSERVER_PORT:-8080}
       # 通知渠道
       - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL:-}
@@ -61,6 +66,11 @@ services:
       - IMMEDIATE_RUN=${IMMEDIATE_RUN:-true}
 
   aiyxdata_tradar-mcp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.mcp
+      args:
+        TARGETARCH: amd64
     image: wantcat/aiyxdata_tradar-mcp:latest
     container_name: aiyxdata_tradar-mcp
     restart: unless-stopped

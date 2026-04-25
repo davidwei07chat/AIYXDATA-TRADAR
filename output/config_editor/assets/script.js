@@ -66,9 +66,14 @@ const INITIAL_YAML = `# 在此粘贴你的 config.yaml...
 const STORAGE_KEY_CONFIG = 'aiyxdata_tradar_config_yaml';
 const STORAGE_KEY_FREQUENCY = 'aiyxdata_tradar_frequency_txt';
 const STORAGE_KEY_TIMELINE = 'aiyxdata_tradar_timeline_yaml';
+const STORAGE_KEY_ANALYSIS_PROMPT = 'aiyxdata_tradar_analysis_prompt_txt';
+const STORAGE_KEY_TRANSLATION_PROMPT = 'aiyxdata_tradar_translation_prompt_txt';
+
 const STORAGE_KEY_CONFIG_TIME = 'aiyxdata_tradar_config_time';
 const STORAGE_KEY_FREQUENCY_TIME = 'aiyxdata_tradar_frequency_time';
 const STORAGE_KEY_TIMELINE_TIME = 'aiyxdata_tradar_timeline_time';
+const STORAGE_KEY_ANALYSIS_PROMPT_TIME = 'aiyxdata_tradar_analysis_prompt_time';
+const STORAGE_KEY_TRANSLATION_PROMPT_TIME = 'aiyxdata_tradar_translation_prompt_time';
 
 // 官网配置文件 URL
 const REMOTE_CONFIG_URL = 'https://raw.githubusercontent.com/AIYXDATA/TrendRadar/refs/heads/master/config/config.yaml';
@@ -79,6 +84,8 @@ const REMOTE_VERSION_URL = 'https://raw.githubusercontent.com/AIYXDATA/TrendRada
 let currentYaml = "";
 let currentFrequency = "";
 let currentTimeline = "";
+let currentAnalysisPrompt = "";
+let currentTranslationPrompt = "";
 let currentFrequencyData = null;  // 缓存解析后的数据，避免重复解析导致索引错位
 let currentTab = "config";
 
@@ -89,6 +96,8 @@ let currentTab = "config";
 let configSaveTimer = null;
 let frequencySaveTimer = null;
 let timelineSaveTimer = null;
+let analysisPromptSaveTimer = null;
+let translationPromptSaveTimer = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const yamlEditor = document.getElementById('yaml-editor');
@@ -130,6 +139,21 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTimeline = INITIAL_TIMELINE;
     }
 
+    // 初始化 Prompt 编辑器
+    const analysisPromptEditor = document.getElementById('analysis_prompt-editor');
+    const translationPromptEditor = document.getElementById('translation_prompt-editor');
+    const savedAnalysisPrompt = localStorage.getItem(STORAGE_KEY_ANALYSIS_PROMPT);
+    const savedTranslationPrompt = localStorage.getItem(STORAGE_KEY_TRANSLATION_PROMPT);
+
+    if (savedAnalysisPrompt) {
+        analysisPromptEditor.value = savedAnalysisPrompt;
+        currentAnalysisPrompt = savedAnalysisPrompt;
+    }
+    if (savedTranslationPrompt) {
+        translationPromptEditor.value = savedTranslationPrompt;
+        currentTranslationPrompt = savedTranslationPrompt;
+    }
+
     // 渲染右侧模块列表
     renderModules();
 
@@ -156,10 +180,22 @@ document.addEventListener('DOMContentLoaded', () => {
         debounceSaveTimeline();
     });
 
+    analysisPromptEditor.addEventListener('input', (e) => {
+        currentAnalysisPrompt = e.target.value;
+        debounceSaveAnalysisPrompt();
+    });
+
+    translationPromptEditor.addEventListener('input', (e) => {
+        currentTranslationPrompt = e.target.value;
+        debounceSaveTranslationPrompt();
+    });
+
     // 同步滚动
     yamlEditor.addEventListener('scroll', () => syncScroll('yaml-editor', 'yaml-backdrop'));
     frequencyEditor.addEventListener('scroll', () => syncScroll('frequency-editor', 'frequency-backdrop'));
     timelineEditor.addEventListener('scroll', () => syncScroll('timeline-editor', 'timeline-backdrop'));
+    analysisPromptEditor.addEventListener('scroll', () => syncScroll('analysis_prompt-editor', 'analysis_prompt-backdrop'));
+    translationPromptEditor.addEventListener('scroll', () => syncScroll('translation_prompt-editor', 'translation_prompt-backdrop'));
 
     // 初始化拖拽上传功能
     initDragAndDrop(yamlEditor, 'config');
@@ -177,16 +213,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    syncYamlToUI();
+    updateSaveTimeDisplay();
 
+    // 初始化所有 Backdrop (Initial backdrop update)
     updateBackdrop('yaml-editor', 'yaml-backdrop');
     updateBackdrop('frequency-editor', 'frequency-backdrop');
     updateBackdrop('timeline-editor', 'timeline-backdrop');
+    updateBackdrop('analysis_prompt-editor', 'analysis_prompt-backdrop');
+    updateBackdrop('translation_prompt-editor', 'translation_prompt-backdrop');
 
-    updateSaveTimeDisplay();
-
-    // 应用初始锁定状态
+    // 应用初始锁定状态 (必须在最后)
     applyLockState();
+
+    // 在最后自动同步自服务器 (Auto-sync from server at the end)
+    const configTime = localStorage.getItem(STORAGE_KEY_CONFIG_TIME);
+    if (!savedConfig || savedConfig === INITIAL_YAML || !configTime) {
+        reloadAllConfigsFromServer(true); 
+    } else {
+        showToast('已恢复本地草稿，如需同步服务器配置，请点击"读取配置"', 'info');
+    }
 });
 
 // 防抖保存 config.yaml
@@ -210,6 +255,21 @@ function debounceSaveTimeline() {
     if (timelineSaveTimer) clearTimeout(timelineSaveTimer);
     timelineSaveTimer = setTimeout(() => {
         saveTimelineToLocalStorage();
+    }, 1000);
+}
+
+// 防抖保存 prompts
+function debounceSaveAnalysisPrompt() {
+    if (analysisPromptSaveTimer) clearTimeout(analysisPromptSaveTimer);
+    analysisPromptSaveTimer = setTimeout(() => {
+        saveAnalysisPromptToLocalStorage();
+    }, 1000);
+}
+
+function debounceSaveTranslationPrompt() {
+    if (translationPromptSaveTimer) clearTimeout(translationPromptSaveTimer);
+    translationPromptSaveTimer = setTimeout(() => {
+        saveTranslationPromptToLocalStorage();
     }, 1000);
 }
 
@@ -389,6 +449,34 @@ function saveAllToLocalStorage() {
     saveConfigToLocalStorage();
     saveFrequencyToLocalStorage();
     saveTimelineToLocalStorage();
+    saveAnalysisPromptToLocalStorage();
+    saveTranslationPromptToLocalStorage();
+}
+
+function saveAnalysisPromptToLocalStorage() {
+    try {
+        if (currentAnalysisPrompt && currentAnalysisPrompt.trim().length > 0) {
+            const now = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEY_ANALYSIS_PROMPT, currentAnalysisPrompt);
+            localStorage.setItem(STORAGE_KEY_ANALYSIS_PROMPT_TIME, now);
+            updateSaveTimeDisplay();
+        }
+    } catch (e) {
+        console.warn('LocalStorage 保存 analysis_prompt 失败:', e);
+    }
+}
+
+function saveTranslationPromptToLocalStorage() {
+    try {
+        if (currentTranslationPrompt && currentTranslationPrompt.trim().length > 0) {
+            const now = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEY_TRANSLATION_PROMPT, currentTranslationPrompt);
+            localStorage.setItem(STORAGE_KEY_TRANSLATION_PROMPT_TIME, now);
+            updateSaveTimeDisplay();
+        }
+    } catch (e) {
+        console.warn('LocalStorage 保存 translation_prompt 失败:', e);
+    }
 }
 
 // 兼容旧调用
@@ -464,6 +552,11 @@ function updateSaveTimeDisplay() {
             }
         }
     }
+
+    // 更新 Prompts 的时间显示 (复用面板或独立)
+    const analysisTime = localStorage.getItem(STORAGE_KEY_ANALYSIS_PROMPT_TIME);
+    const translationTime = localStorage.getItem(STORAGE_KEY_TRANSLATION_PROMPT_TIME);
+    // 这里可以根据 UI 需求添加对应的显示逻辑
 }
 
 // ==========================================
@@ -902,7 +995,10 @@ function renderControls(mod) {
             
             html += `<div class="relative group">`;
             html += createInputControl(mod.key, "model", "模型名称");
-            html += `<button type="button" class="absolute right-0 top-7 text-xs text-blue-500 hover:text-blue-700 bg-white px-2 py-1 border border-blue-200 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10" id="save-custom-preset-btn" onclick="saveCurrentAsCustomPreset()"><i class="fa-solid fa-save mr-1"></i>将当前配置存为自定义方案 (Save as profile)</button>`;
+            html += `<div class="absolute right-0 top-7 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button type="button" class="text-xs text-blue-500 hover:text-blue-700 bg-white px-2 py-1 border border-blue-200 rounded shadow-sm" id="query-model-btn" onclick="openModelQueryModal()"><i class="fa-solid fa-magnifying-glass mr-1"></i>查询模型</button>
+                <button type="button" class="text-xs text-blue-500 hover:text-blue-700 bg-white px-2 py-1 border border-blue-200 rounded shadow-sm" id="save-custom-preset-btn" onclick="saveCurrentAsCustomPreset()"><i class="fa-solid fa-save mr-1"></i>保存方案</button>
+            </div>`;
             html += `</div>`;
             
             html += createInputControl(mod.key, "api_key", "API Key", "password");
@@ -989,9 +1085,12 @@ function syncYamlToUI() {
         renderPlatformsList();
         renderRssFeedsList();
         renderStandaloneLists();
-    } catch (e) {
-        // 解析失败时不更新 UI，保持原有状态
-    }
+    
+    // 渲染完毕，应用锁定状态
+    applyLockState();
+} catch (e) {
+    // 解析失败
+}
 
     // 重新应用锁定状态（如果处于锁定模式）
     applyLockState();
@@ -1170,7 +1269,18 @@ window.copyResult = function() {
     const yamlEditor = document.getElementById('yaml-editor');
     const frequencyEditor = document.getElementById('frequency-editor');
     const timelineEditor = document.getElementById('timeline-editor');
-    const editor = currentTab === 'config' ? yamlEditor : currentTab === 'timeline' ? timelineEditor : frequencyEditor;
+    const analysisEditor = document.getElementById('analysis_prompt-editor');
+    const translationEditor = document.getElementById('translation_prompt-editor');
+
+    let editor;
+    switch(currentTab) {
+        case 'config': editor = yamlEditor; break;
+        case 'frequency': editor = frequencyEditor; break;
+        case 'timeline': editor = timelineEditor; break;
+        case 'analysis_prompt': editor = analysisEditor; break;
+        case 'translation_prompt': editor = translationEditor; break;
+        default: editor = yamlEditor;
+    }
 
     editor.select();
     document.execCommand('copy');
@@ -1230,20 +1340,33 @@ window.switchTab = function(tab) {
     const configBtn = document.getElementById('tab-config');
     const freqBtn = document.getElementById('tab-frequency');
     const timelineBtn = document.getElementById('tab-timeline');
+    const analysisBtn = document.getElementById('tab-analysis_prompt');
+    const translationBtn = document.getElementById('tab-translation_prompt');
 
     configBtn.className = tab === 'config' ? activeClass : inactiveClass;
     freqBtn.className = tab === 'frequency' ? activeClass : inactiveClass;
     timelineBtn.className = tab === 'timeline' ? activeClass : inactiveClass;
+    if (analysisBtn) analysisBtn.className = tab === 'analysis_prompt' ? activeClass : inactiveClass;
+    if (translationBtn) translationBtn.className = tab === 'translation_prompt' ? activeClass : inactiveClass;
 
     // 更新编辑器显示
     document.getElementById('yaml-editor-wrap').classList.toggle('hidden', tab !== 'config');
     document.getElementById('frequency-editor-wrap').classList.toggle('hidden', tab !== 'frequency');
     document.getElementById('timeline-editor-wrap').classList.toggle('hidden', tab !== 'timeline');
+    document.getElementById('analysis_prompt-editor-wrap').classList.toggle('hidden', tab !== 'analysis_prompt');
+    document.getElementById('translation_prompt-editor-wrap').classList.toggle('hidden', tab !== 'translation_prompt');
 
     // 更新右侧面板
     document.getElementById('config-panel').classList.toggle('hidden', tab !== 'config');
     document.getElementById('frequency-panel').classList.toggle('hidden', tab !== 'frequency');
     document.getElementById('timeline-panel').classList.toggle('hidden', tab !== 'timeline');
+    
+    // Prompt 没有专门的右侧可视化面板，显示空提示
+    const isPromptTab = tab === 'analysis_prompt' || tab === 'translation_prompt';
+    if (isPromptTab) {
+        // 可以清空或显示一个占位符
+        document.getElementById('config-panel').classList.add('hidden');
+    }
 
     // 更新模块导航栏显示状态：只在 config 模式下显示
     const moduleNav = document.getElementById('module-nav');
@@ -1255,9 +1378,14 @@ window.switchTab = function(tab) {
     const saveTimeConfig = document.getElementById('save-time-config');
     const saveTimeFrequency = document.getElementById('save-time-frequency');
     const saveTimeTimeline = document.getElementById('save-time-timeline');
+    const saveTimeAnalysis = document.getElementById('save-time-analysis_prompt');
+    const saveTimeTranslation = document.getElementById('save-time-translation_prompt');
+
     if (saveTimeConfig) saveTimeConfig.classList.toggle('hidden', tab !== 'config');
     if (saveTimeFrequency) saveTimeFrequency.classList.toggle('hidden', tab !== 'frequency');
     if (saveTimeTimeline) saveTimeTimeline.classList.toggle('hidden', tab !== 'timeline');
+    if (saveTimeAnalysis) saveTimeAnalysis.classList.toggle('hidden', tab !== 'analysis_prompt');
+    if (saveTimeTranslation) saveTimeTranslation.classList.toggle('hidden', tab !== 'translation_prompt');
 
     // 更新右侧标题
     const versionBtn = document.getElementById('version-check-btn');
@@ -1267,8 +1395,14 @@ window.switchTab = function(tab) {
     } else if (tab === 'frequency') {
         document.getElementById('right-panel-title').textContent = '频率词编辑';
         if (versionBtn) { versionBtn.style.display = ''; versionBtn.title = "检测 frequency_words.txt 版本"; }
-    } else {
+    } else if (tab === 'timeline') {
         document.getElementById('right-panel-title').textContent = '时间线调度';
+        if (versionBtn) versionBtn.style.display = 'none';
+    } else if (tab === 'analysis_prompt') {
+        document.getElementById('right-panel-title').textContent = '分析提示词配置';
+        if (versionBtn) versionBtn.style.display = 'none';
+    } else if (tab === 'translation_prompt') {
+        document.getElementById('right-panel-title').textContent = '翻译提示词配置';
         if (versionBtn) versionBtn.style.display = 'none';
     }
 
@@ -2595,6 +2729,7 @@ function renderDisplayRegionsList() {
             }
         });
     }
+    applyLockState();
 }
 
 // 切换区域启用状态
@@ -2806,6 +2941,7 @@ function renderRssFeedsList() {
             <div class="text-[10px] text-gray-400 mt-1 truncate" title="${f.url}">${f.url}</div>
         </div>
     `).join('');
+    applyLockState();
 }
 
 // 删除 RSS 源
@@ -3084,6 +3220,7 @@ function renderStandaloneLists() {
             `;
         }).join('');
     }
+    applyLockState();
 }
 
 window.toggleStandaloneItem = function(type, id) {
@@ -5485,68 +5622,221 @@ function reorderDayPlanPeriods(presetName, planKey, orderedKeys) {
 // ==========================================
 
 window.openSaveProfileModal = function() {
-    const profileName = prompt('请输入方案名称:', '我的方案');
-    if (!profileName) return;
+    const modal = document.getElementById('save-profile-modal');
+    const input = document.getElementById('save-profile-name');
+    const listContainer = document.getElementById('existing-profiles-list');
+
+    // 清空输入框
+    input.value = '';
+    input.focus();
+
+    // 显示模态框
+    modal.classList.remove('hidden');
+
+    // 加载现有方案列表
+    listContainer.innerHTML = '<div class="text-center py-4 text-xs text-gray-400">正在加载已有方案...</div>';
+
+    fetch('/api/profiles/list')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success || !data.profiles || data.profiles.length === 0) {
+                listContainer.innerHTML = '<div class="text-center py-4 text-xs text-gray-400">暂无已保存的方案</div>';
+                return;
+            }
+
+            const profiles = data.profiles;
+            let html = '';
+            profiles.forEach((profile, index) => {
+                const dateStr = new Date(profile.mtime * 1000).toLocaleString('zh-CN');
+                const sizeKB = (profile.size / 1024).toFixed(1);
+                html += `
+                    <div class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer border border-transparent hover:border-gray-200 transition-all"
+                         onclick="selectProfileToOverwrite(${index}, '${profile.name}')">
+                        <input type="radio" name="profile-select" value="${profile.name}" class="profile-radio-${index}">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-semibold text-gray-700 truncate">${index + 1}. ${profile.name}</div>
+                            <div class="text-[10px] text-gray-500">${dateStr} • ${sizeKB}KB</div>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+            window.currentProfiles = profiles;
+        })
+        .catch(e => {
+            listContainer.innerHTML = '<div class="text-center py-4 text-xs text-red-400">加载方案列表失败</div>';
+            console.error('Failed to load profiles:', e);
+        });
+};
+
+window.closeSaveProfileModal = function() {
+    const modal = document.getElementById('save-profile-modal');
+    modal.classList.add('hidden');
+    window.selectedProfileToOverwrite = null;
+};
+
+window.selectProfileToOverwrite = function(index, profileName) {
+    window.selectedProfileToOverwrite = profileName;
+    // 更新单选框状态
+    document.querySelectorAll('input[name="profile-select"]').forEach((radio, i) => {
+        radio.checked = (i === index);
+    });
+};
+
+window.confirmSaveProfileToBackend = function() {
+    const input = document.getElementById('save-profile-name');
+    let profileName = input.value.trim();
+
+    // 如果选择了现有方案，则覆盖
+    if (window.selectedProfileToOverwrite) {
+        const confirmMsg = `确认覆盖方案 "${window.selectedProfileToOverwrite}" 吗？\n\n此操作将用当前配置替换该方案。`;
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        profileName = window.selectedProfileToOverwrite;
+    } else if (!profileName) {
+        // 如果没有输入名称且没有选择现有方案，则自动生成时间戳
+        profileName = '';
+    }
+
+    closeSaveProfileModal();
     confirmSaveProfile(profileName);
 };
 
 function confirmSaveProfile(profileName) {
-    try {
-        const bundle = {
-            name: profileName,
-            timestamp: new Date().toISOString(),
-            config: currentYaml,
-            frequency: currentFrequency,
-            timeline: currentTimeline
-        };
-        const profiles = JSON.parse(localStorage.getItem('aiyxdata_tradar_profiles') || '[]');
-        profiles.push(bundle);
-        localStorage.setItem('aiyxdata_tradar_profiles', JSON.stringify(profiles));
-        showToast(`方案 "${profileName}" 已保存`, 'success');
-    } catch (e) {
-        showToast('保存方案失败: ' + e.message, 'error');
-    }
+    showToast('正在保存方案到服务器...', 'info');
+    const bundle = {
+        name: profileName || undefined,
+        timestamp: new Date().toISOString(),
+        config: document.getElementById('yaml-editor')?.value || currentYaml,
+        frequency: document.getElementById('frequency-editor')?.value || currentFrequency,
+        timeline: document.getElementById('timeline-editor')?.value || currentTimeline,
+        analysis_prompt: document.getElementById('analysis_prompt-editor')?.value || currentAnalysisPrompt,
+        translation_prompt: document.getElementById('translation_prompt-editor')?.value || currentTranslationPrompt
+    };
+
+    fetch('/api/profiles/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: profileName, content: bundle })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`方案 "${data.name}" 已保存为您独立的方案并持久化。`, 'success');
+        } else {
+            showToast('保存方案失败: ' + data.error, 'error');
+        }
+    })
+    .catch(e => {
+        showToast('保存请求失败: ' + e.message, 'error');
+    });
 }
 
 window.openLoadProfileModal = function() {
-    try {
-        const profiles = JSON.parse(localStorage.getItem('aiyxdata_tradar_profiles') || '[]');
-        if (profiles.length === 0) {
-            showToast('暂无保存的方案', 'info');
-            return;
-        }
-        let options = profiles.map((p, i) => `${i + 1}. ${p.name} (${new Date(p.timestamp).toLocaleString('zh-CN')})`).join('\n');
-        const choice = prompt('请选择要提取的方案:\n\n' + options + '\n\n输入序号:', '1');
-        if (!choice) return;
-        const index = parseInt(choice) - 1;
-        if (index < 0 || index >= profiles.length) {
-            showToast('无效的选择', 'error');
-            return;
-        }
-        applyProfile(profiles[index]);
-    } catch (e) {
-        showToast('提取方案失败: ' + e.message, 'error');
-    }
+    showToast('正在获取方案列表...', 'info');
+    fetch('/api/profiles/list')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                showToast('获取方案列表失败: ' + data.error, 'error');
+                return;
+            }
+            const profiles = data.profiles || [];
+            if (profiles.length === 0) {
+                showToast('服务器上暂无保存的方案', 'info');
+                return;
+            }
+            
+            let options = profiles.map((p, i) => {
+                const dateStr = new Date(p.mtime * 1000).toLocaleString('zh-CN');
+                return `${i + 1}. ${p.name} (${dateStr})`;
+            }).join('\n');
+            
+            const choice = prompt('请选择要提取的方案:\n\n' + options + '\n\n输入序号:', '1');
+            if (!choice) return;
+            
+            const index = parseInt(choice) - 1;
+            if (index < 0 || index >= profiles.length) {
+                showToast('无效的选择', 'error');
+                return;
+            }
+            
+            loadProfileFromServer(profiles[index].name);
+        })
+        .catch(e => {
+            showToast('获取方案列表失败: ' + e.message, 'error');
+        });
 };
+
+function loadProfileFromServer(profileName) {
+    showToast(`正在提取方案 "${profileName}"...`, 'info');
+    fetch(`/api/profiles/load?name=${encodeURIComponent(profileName)}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                showToast('提取方案失败: ' + data.error, 'error');
+                return;
+            }
+            
+            if (data.type === 'bundle') {
+                applyProfile(data.data);
+            } else {
+                showToast('不支持的旧版方案格式', 'warning');
+            }
+        })
+        .catch(e => {
+            showToast('提取方案请求失败: ' + e.message, 'error');
+        });
+}
 
 function applyProfile(bundle) {
     try {
-        document.getElementById('yaml-editor').value = bundle.config;
-        currentYaml = bundle.config;
-        syncYamlToUI();
-        updateBackdrop('yaml-editor', 'yaml-backdrop');
-        document.getElementById('frequency-editor').value = bundle.frequency;
-        currentFrequency = bundle.frequency;
-        syncFrequencyToUI();
-        updateBackdrop('frequency-editor', 'frequency-backdrop');
-        document.getElementById('timeline-editor').value = bundle.timeline;
-        currentTimeline = bundle.timeline;
-        syncTimelineToUI();
-        updateBackdrop('timeline-editor', 'timeline-backdrop');
+        if (bundle.config) {
+            document.getElementById('yaml-editor').value = bundle.config;
+            currentYaml = bundle.config;
+            syncYamlToUI();
+            updateBackdrop('yaml-editor', 'yaml-backdrop');
+        }
+        
+        if (bundle.frequency) {
+            document.getElementById('frequency-editor').value = bundle.frequency;
+            currentFrequency = bundle.frequency;
+            syncFrequencyToUI();
+            updateBackdrop('frequency-editor', 'frequency-backdrop');
+        }
+        
+        if (bundle.timeline) {
+            document.getElementById('timeline-editor').value = bundle.timeline;
+            currentTimeline = bundle.timeline;
+            syncTimelineToUI();
+            updateBackdrop('timeline-editor', 'timeline-backdrop');
+        }
+
+        if (bundle.analysis_prompt) {
+            const el = document.getElementById('analysis_prompt-editor');
+            if (el) el.value = bundle.analysis_prompt;
+            currentAnalysisPrompt = bundle.analysis_prompt;
+            updateBackdrop('analysis_prompt-editor', 'analysis_prompt-backdrop');
+        }
+
+        if (bundle.translation_prompt) {
+            const el = document.getElementById('translation_prompt-editor');
+            if (el) el.value = bundle.translation_prompt;
+            currentTranslationPrompt = bundle.translation_prompt;
+            updateBackdrop('translation_prompt-editor', 'translation_prompt-backdrop');
+        }
+        
+        // 提取后保存到 localstorage 中以保持本地状态同步
         saveAllToLocalStorage();
-        showToast(`方案 "${bundle.name}" 已提取`, 'success');
+        showToast(`方案已提取并应用`, 'success');
+
+        // 根据当前的锁定状态重新应用锁定
+        if (isGlobalLocked) {
+            applyLockState();
+        }
     } catch (e) {
-        showToast('应用方案失败: ' + e.message, 'error');
+        showToast('应用方案到 UI 失败: ' + e.message, 'error');
     }
 }
 
@@ -5556,29 +5846,83 @@ function applyProfile(bundle) {
 
 let isGlobalLocked = true;
 
-// 应用锁定状态到右侧面板的所有交互元素
+// 应用锁定状态到所有交互面板 (Apply lock state to all interactive panels)
 function applyLockState() {
     if (!isGlobalLocked) return;
 
-    const rightPanels = ['config-panel', 'frequency-panel', 'timeline-panel'];
-    rightPanels.forEach(panelId => {
-        const panel = document.getElementById(panelId);
-        if (panel) {
-            // 禁用所有交互元素
-            const elements = panel.querySelectorAll('input, select, textarea, button, [contenteditable="true"]');
-            elements.forEach(el => {
-                el.disabled = true;
-                el.style.pointerEvents = 'none';
-                el.style.opacity = '0.6';
-            });
+    // 1. 处理左侧编辑器：使用 readOnly 允许滚动，但禁止输入 (Handle left editors: use readOnly to allow scroll but block input)
+    const leftEditorWraps = [
+        'yaml-editor-wrap', 'frequency-editor-wrap', 'timeline-editor-wrap',
+        'analysis_prompt-editor-wrap', 'translation_prompt-editor-wrap'
+    ];
+    leftEditorWraps.forEach(id => {
+        const wrap = document.getElementById(id);
+        if (wrap) {
+            // 确保容器可以滚动
+            wrap.style.overflow = 'auto';
 
-            // 禁用所有 label 标签（防止通过 label 触发 checkbox/radio）
-            const labels = panel.querySelectorAll('label');
-            labels.forEach(label => {
-                label.style.pointerEvents = 'none';
-                label.style.opacity = '0.6';
-                label.style.cursor = 'not-allowed';
+            const tas = wrap.querySelectorAll('textarea');
+            tas.forEach(ta => {
+                ta.readOnly = true;
+                ta.style.pointerEvents = 'auto'; // 允许点击和滚动
+                ta.style.opacity = '0.8';
+                ta.style.cursor = 'text';
             });
+            // 禁用包装器内的其他按钮
+            const btns = wrap.querySelectorAll('button');
+            btns.forEach(btn => {
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.6';
+            });
+        }
+    });
+
+    // 2. 处理右侧可视化面板：禁用输入但保留滚动 (Handle right panels: disable inputs but keep scrolling)
+    const rightPanels = [
+        'config-panel', 'frequency-panel', 'timeline-panel', 'module-nav'
+    ];
+    rightPanels.forEach(id => {
+        const panel = document.getElementById(id);
+        if (panel) {
+            // 不阻断容器级别的 pointerEvents，保留滚动能力
+            panel.style.opacity = '0.7';
+            panel.style.userSelect = 'none';
+            // 禁用所有交互元素
+            const batch = panel.querySelectorAll('input, select, textarea, button, [role="button"], [onclick]');
+            batch.forEach(el => {
+                if (el.tagName !== 'BUTTON' && el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA') {
+                    // 对于非表单元素，使用 pointerEvents 和 cursor
+                    el.style.pointerEvents = 'none';
+                    el.style.cursor = 'not-allowed';
+                    el.style.opacity = '0.6';
+                } else {
+                    // 对于表单元素，使用 disabled 属性
+                    el.disabled = true;
+                    el.style.pointerEvents = 'none';
+                    el.style.opacity = '0.6';
+                }
+            });
+            // 特别处理 module-nav 中的数字导航按钮 - 保持可用
+            if (id === 'module-nav') {
+                const navBtns = panel.querySelectorAll('.module-nav-btn');
+                navBtns.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.opacity = '1';
+                });
+            }
+        }
+    });
+
+    // 3. 只禁用修改类按钮，保留浏览/加载类按钮
+    const disableOnLock = ['btn-apply', 'btn-save-run'];
+    disableOnLock.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.disabled = true;
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.6';
         }
     });
 }
@@ -5598,25 +5942,62 @@ window.toggleGlobalLock = function() {
         btn.classList.remove('bg-gray-100', 'text-gray-700', 'border-gray-300');
         btn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
 
-        // 启用所有交互元素
-        const rightPanels = ['config-panel', 'frequency-panel', 'timeline-panel'];
-        rightPanels.forEach(panelId => {
-            const panel = document.getElementById(panelId);
-            if (panel) {
-                const elements = panel.querySelectorAll('input, select, textarea, button, [contenteditable="true"]');
-                elements.forEach(el => {
-                    el.disabled = false;
-                    el.style.pointerEvents = '';
-                    el.style.opacity = '';
+        // 恢复左侧编辑器
+        const leftEditorWraps = [
+            'yaml-editor-wrap', 'frequency-editor-wrap', 'timeline-editor-wrap',
+            'analysis_prompt-editor-wrap', 'translation_prompt-editor-wrap'
+        ];
+        leftEditorWraps.forEach(id => {
+            const wrap = document.getElementById(id);
+            if (wrap) {
+                wrap.style.overflow = '';
+                const tas = wrap.querySelectorAll('textarea');
+                tas.forEach(ta => {
+                    ta.readOnly = false;
+                    ta.style.pointerEvents = '';
+                    ta.style.opacity = '';
                 });
+                const btns = wrap.querySelectorAll('button');
+                btns.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.pointerEvents = '';
+                    btn.style.opacity = '';
+                });
+            }
+        });
 
-                // 恢复所有 label 标签
-                const labels = panel.querySelectorAll('label');
-                labels.forEach(label => {
-                    label.style.pointerEvents = '';
-                    label.style.opacity = '';
-                    label.style.cursor = '';
+        // 恢复右侧面板
+        const rightPanels = [
+            'config-panel', 'frequency-panel', 'timeline-panel', 'module-nav'
+        ];
+        rightPanels.forEach(id => {
+            const panel = document.getElementById(id);
+            if (panel) {
+                panel.style.opacity = '';
+                panel.style.userSelect = 'auto';
+                const batch = panel.querySelectorAll('input, select, textarea, button, [role="button"], [onclick]');
+                batch.forEach(el => {
+                    if (el.tagName !== 'BUTTON' && el.tagName !== 'INPUT' && el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA') {
+                        el.style.pointerEvents = '';
+                        el.style.cursor = '';
+                        el.style.opacity = '';
+                    } else {
+                        el.disabled = false;
+                        el.style.pointerEvents = '';
+                        el.style.opacity = '';
+                    }
                 });
+            }
+        });
+
+        // 恢复修改类按钮
+        const disableOnLock = ['btn-apply', 'btn-save-run'];
+        disableOnLock.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.disabled = false;
+                el.style.pointerEvents = '';
+                el.style.opacity = '';
             }
         });
 
@@ -5628,15 +6009,17 @@ window.toggleGlobalLock = function() {
 // 15. 实时配置同步 (Real-time Config Sync)
 // ==========================================
 
-window.reloadAllConfigsFromServer = function() {
-    showToast('正在从服务器读取配置...', 'info');
+window.reloadAllConfigsFromServer = function(silent = false) {
+    if (!silent) showToast('正在从服务器读取配置...', 'info');
 
-    // 并行读取三个配置文件
+    // 并行读取五个配置文件
     Promise.all([
         fetch('/api/load?file=config').then(r => r.json()),
         fetch('/api/load?file=frequency').then(r => r.json()),
-        fetch('/api/load?file=timeline').then(r => r.json())
-    ]).then(([configRes, frequencyRes, timelineRes]) => {
+        fetch('/api/load?file=timeline').then(r => r.json()),
+        fetch('/api/load?file=analysis_prompt').then(r => r.json()),
+        fetch('/api/load?file=translation_prompt').then(r => r.json())
+    ]).then(([configRes, frequencyRes, timelineRes, analysisRes, translationRes]) => {
         let hasError = false;
         let errorMsg = '';
 
@@ -5646,6 +6029,7 @@ window.reloadAllConfigsFromServer = function() {
             currentYaml = configRes.content;
             updateBackdrop('yaml-editor', 'yaml-backdrop');
             syncYamlToUI();
+            localStorage.setItem(STORAGE_KEY_CONFIG, currentYaml); // 同步到本地
         } else {
             hasError = true;
             errorMsg += 'config.yaml 读取失败; ';
@@ -5658,6 +6042,7 @@ window.reloadAllConfigsFromServer = function() {
             currentFrequencyData = null;
             updateBackdrop('frequency-editor', 'frequency-backdrop');
             syncFrequencyToUI();
+            localStorage.setItem(STORAGE_KEY_FREQUENCY, currentFrequency);
         } else {
             hasError = true;
             errorMsg += 'frequency_words.txt 读取失败; ';
@@ -5669,18 +6054,59 @@ window.reloadAllConfigsFromServer = function() {
             currentTimeline = timelineRes.content;
             updateBackdrop('timeline-editor', 'timeline-backdrop');
             syncTimelineToUI();
+            localStorage.setItem(STORAGE_KEY_TIMELINE, currentTimeline);
         } else {
             hasError = true;
             errorMsg += 'timeline.yaml 读取失败; ';
         }
 
-        if (hasError) {
-            showToast('部分配置读取失败: ' + errorMsg, 'error');
+        // 处理 Prompts
+        if (analysisRes.success && analysisRes.content) {
+            const el = document.getElementById('analysis_prompt-editor');
+            if (el) el.value = analysisRes.content;
+            currentAnalysisPrompt = analysisRes.content;
+            updateBackdrop('analysis_prompt-editor', 'analysis_prompt-backdrop');
+            localStorage.setItem(STORAGE_KEY_ANALYSIS_PROMPT, currentAnalysisPrompt);
         } else {
-            showToast('配置已从服务器读取并同步', 'success');
+            hasError = true;
+            errorMsg += 'analysis_prompt 读取失败; ';
+        }
+
+        if (translationRes.success && translationRes.content) {
+            const el = document.getElementById('translation_prompt-editor');
+            if (el) el.value = translationRes.content;
+            currentTranslationPrompt = translationRes.content;
+            updateBackdrop('translation_prompt-editor', 'translation_prompt-backdrop');
+            localStorage.setItem(STORAGE_KEY_TRANSLATION_PROMPT, currentTranslationPrompt);
+        } else {
+            hasError = true;
+            errorMsg += 'translation_prompt 读取失败; ';
+        }
+
+        if (hasError) {
+            if (!silent) showToast('部分配置读取失败: ' + errorMsg, 'error');
+        } else {
+            if (!silent) {
+                showToast('配置已从服务器读取并同步', 'success');
+            } else {
+                showToast('已自动同步服务器最新配置', 'success');
+            }
+            // 更新保存时间
+            const now = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEY_CONFIG_TIME, now);
+            localStorage.setItem(STORAGE_KEY_FREQUENCY_TIME, now);
+            localStorage.setItem(STORAGE_KEY_TIMELINE_TIME, now);
+            localStorage.setItem(STORAGE_KEY_ANALYSIS_PROMPT_TIME, now);
+            localStorage.setItem(STORAGE_KEY_TRANSLATION_PROMPT_TIME, now);
+            updateSaveTimeDisplay();
+        }
+
+        // 重要：由于重新读取了配置，需要根据当前的锁定状态重新应用锁定
+        if (isGlobalLocked) {
+            applyLockState();
         }
     }).catch(e => {
-        showToast('读取配置失败: ' + e.message, 'error');
+        if (!silent) showToast('读取配置失败: ' + e.message, 'error');
     });
 };
 
@@ -5699,9 +6125,11 @@ window.applyToBackend = function() {
     const configContent = yamlEditor ? yamlEditor.value : currentYaml;
     const frequencyContent = frequencyEditor ? frequencyEditor.value : currentFrequency;
     const timelineContent = timelineEditor ? timelineEditor.value : currentTimeline;
+    const analysisContent = document.getElementById('analysis_prompt-editor')?.value || currentAnalysisPrompt;
+    const translationContent = document.getElementById('translation_prompt-editor')?.value || currentTranslationPrompt;
 
-    // 并行保存三个配置文件到服务器
-    Promise.all([
+    // 并行保存五个配置文件到服务器
+    return Promise.all([
         fetch('/api/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -5716,8 +6144,18 @@ window.applyToBackend = function() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ file: 'timeline', content: timelineContent })
+        }).then(r => r.json()),
+        fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: 'analysis_prompt', content: analysisContent })
+        }).then(r => r.json()),
+        fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file: 'translation_prompt', content: translationContent })
         }).then(r => r.json())
-    ]).then(([configRes, frequencyRes, timelineRes]) => {
+    ]).then(([configRes, frequencyRes, timelineRes, analysisRes, translationRes]) => {
         let hasError = false;
         let errorMsg = '';
 
@@ -5736,13 +6174,61 @@ window.applyToBackend = function() {
             errorMsg += 'timeline.yaml 保存失败; ';
         }
 
+        if (!analysisRes.success) {
+            hasError = true;
+            errorMsg += 'analysis_prompt 保存失败; ';
+        }
+
+        if (!translationRes.success) {
+            hasError = true;
+            errorMsg += 'translation_prompt 保存失败; ';
+        }
+
         if (hasError) {
             showToast('部分配置应用失败: ' + errorMsg, 'error');
+            return { success: false, error: errorMsg };
         } else {
             showToast('配置已成功应用到服务器', 'success');
+            return { success: true };
         }
     }).catch(e => {
         showToast('应用配置失败: ' + e.message, 'error');
+        return { success: false, error: e.message };
+    });
+};
+
+window.saveAndRefresh = function() {
+    showToast('正在保存并触发分析...', 'info');
+    
+    // 1. 先调用应用同步逻辑
+    applyToBackend().then(res => {
+        if (res.success) {
+            showToast('配置已应用，正在触发后端分析...', 'success');
+            
+            // 2. 调用刷新端点
+            return fetch('/api/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            }).then(r => r.json());
+        } else {
+            throw new Error(res.error || '保存配置失败');
+        }
+    }).then(refreshRes => {
+        if (refreshRes && refreshRes.success) {
+            showToast('后端分析已启动，请耐心等待抓取完成', 'success');
+            // 可选：几秒后尝试刷新主页面（如果处于 iframe 中）
+            setTimeout(() => {
+                if (window.parent && window.parent.location) {
+                    // window.parent.location.reload(); 
+                }
+            }, 3000);
+        } else if (refreshRes) {
+            showToast('分析触发失败: ' + refreshRes.error, 'error');
+        }
+    }).catch(e => {
+        console.error('Save & Refresh 失败:', e);
+        showToast('操作失败: ' + e.message, 'error');
     });
 };
 
@@ -5845,3 +6331,263 @@ window.saveCurrentAsCustomPreset = function() {
     showToast('当前配置已保存为预设', 'success');
 };
 // --- End AI Presets Logic ---
+
+// ==========================================
+// AI 模型查询功能
+// ==========================================
+
+// 模型配置规则映射
+const MODEL_CONFIG_RULES = {
+    'deepseek-ai/deepseek-v3': {
+        api_base: 'https://api.siliconflow.cn/v1',
+        temperature: 1,
+        max_tokens: 10000
+    },
+    'gpt-4': {
+        api_base: 'https://api.openai.com/v1',
+        temperature: 1,
+        max_tokens: 8000
+    },
+    'gpt-3.5-turbo': {
+        api_base: 'https://api.openai.com/v1',
+        temperature: 1,
+        max_tokens: 4000
+    },
+    'zhipu/glm-4': {
+        temperature: 1,
+        max_tokens: 8000
+    },
+    'zhipu/glm-4-flash': {
+        temperature: 1,
+        max_tokens: 8000
+    }
+};
+
+// 打开模型查询模态框
+window.openModelQueryModal = function() {
+    // 创建模态框 HTML
+    const modalHtml = `
+    <div id="modelQueryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-hidden" style="resize: both; min-width: 400px; min-height: 300px;">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800">🔍 查询可用模型</h3>
+                <button onclick="closeModelQueryModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+            </div>
+
+            <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(100% - 140px);">
+                <!-- 步骤 1：连接测试 -->
+                <div id="step1-connection" class="mb-6">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">步骤 1：测试连接</h4>
+                    <div class="bg-gray-50 p-3 rounded mb-3 text-xs">
+                        <p class="mb-2"><strong>API Base:</strong> <code id="displayApiBase" class="bg-white px-2 py-1 rounded">-</code></p>
+                        <p><strong>API Key:</strong> <code id="displayApiKey" class="bg-white px-2 py-1 rounded">-</code></p>
+                    </div>
+                    <button onclick="testAIConnection()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium">
+                        <i class="fa-solid fa-plug mr-1"></i>测试连接
+                    </button>
+                    <div id="connectionStatus" class="mt-3 text-sm"></div>
+                </div>
+
+                <!-- 步骤 2：模型列表 -->
+                <div id="step2-models" class="mb-4" style="display:none;">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">步骤 2：选择模型</h4>
+                    <!-- 搜索框 -->
+                    <div class="mb-3">
+                        <input type="text" id="modelSearchInput" placeholder="🔍 搜索模型..." class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" oninput="filterModels()">
+                    </div>
+                    <div id="modelList" class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                        <div class="col-span-2 text-center text-gray-500 py-4">
+                            <i class="fa-solid fa-spinner fa-spin mr-2"></i>加载中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 px-6 py-4 flex justify-end gap-2">
+                <button onclick="closeModelQueryModal()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+
+    // 移除旧的模态框（如果存在）
+    const oldModal = document.getElementById('modelQueryModal');
+    if (oldModal) oldModal.remove();
+
+    // 添加新的模态框
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // 更新显示的 API 信息
+    const apiBaseInput = document.querySelector('input[data-path="api_base"]');
+    const apiKeyInput = document.querySelector('input[data-path="api_key"]');
+
+    const apiBase = apiBaseInput ? apiBaseInput.value : '';
+    const apiKey = apiKeyInput ? apiKeyInput.value : '';
+
+    document.getElementById('displayApiBase').textContent = apiBase || '(未设置)';
+    document.getElementById('displayApiKey').textContent = apiKey ? apiKey.substring(0, 10) + '...' : '(未设置)';
+
+    // 关闭模态框时的点击事件
+    document.getElementById('modelQueryModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModelQueryModal();
+        }
+    });
+};
+
+// 关闭模型查询模态框
+window.closeModelQueryModal = function() {
+    const modal = document.getElementById('modelQueryModal');
+    if (modal) modal.remove();
+};
+
+// 测试 AI 连接
+window.testAIConnection = function() {
+    const apiBaseInput = document.querySelector('input[data-path="api_base"]');
+    const apiKeyInput = document.querySelector('input[data-path="api_key"]');
+    const modelInput = document.querySelector('input[data-path="model"]');
+
+    const apiBase = apiBaseInput ? apiBaseInput.value : '';
+    const apiKey = apiKeyInput ? apiKeyInput.value : '';
+    const model = modelInput ? modelInput.value : '';
+
+    if (!apiBase || !apiKey) {
+        showToast('请先填写 API Base 和 API Key', 'warning');
+        return;
+    }
+
+    const statusDiv = document.getElementById('connectionStatus');
+    statusDiv.innerHTML = '<div class="text-blue-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i>测试连接中...</div>';
+
+    fetch('/api/check_ai_connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            api_base: apiBase,
+            api_key: apiKey,
+            model: model || 'test'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = '<div class="text-green-600"><i class="fa-solid fa-check-circle mr-2"></i>连接成功！</div>';
+            // 加载模型列表
+            setTimeout(() => fetchAvailableModels(apiBase, apiKey), 500);
+        } else {
+            statusDiv.innerHTML = `<div class="text-red-600"><i class="fa-solid fa-exclamation-circle mr-2"></i>连接失败: ${data.error || '未知错误'}</div>`;
+        }
+    })
+    .catch(err => {
+        statusDiv.innerHTML = `<div class="text-red-600"><i class="fa-solid fa-exclamation-circle mr-2"></i>请求失败: ${err.message}</div>`;
+    });
+};
+
+// 获取可用模型列表
+window.fetchAvailableModels = function(apiBase, apiKey) {
+    const modelListDiv = document.getElementById('modelList');
+    modelListDiv.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>加载模型列表中...</div>';
+
+    fetch('/api/get_ai_models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            api_base: apiBase,
+            api_key: apiKey
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.models && data.models.length > 0) {
+            // 显示步骤 2
+            document.getElementById('step2-models').style.display = 'block';
+
+            // 渲染模型列表
+            const modelsHtml = data.models.map(model => `
+                <button type="button" onclick="selectModel('${model}')" class="p-3 border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-500 text-left text-xs transition-colors">
+                    <div class="font-medium text-gray-800">${model}</div>
+                    <div class="text-gray-500 text-xs mt-1">点击选择</div>
+                </button>
+            `).join('');
+
+            modelListDiv.innerHTML = modelsHtml;
+        } else {
+            modelListDiv.innerHTML = '<div class="col-span-2 text-center text-red-600 py-4"><i class="fa-solid fa-exclamation-circle mr-2"></i>无法获取模型列表</div>';
+        }
+    })
+    .catch(err => {
+        modelListDiv.innerHTML = `<div class="col-span-2 text-center text-red-600 py-4"><i class="fa-solid fa-exclamation-circle mr-2"></i>加载失败: ${err.message}</div>`;
+    });
+};
+
+// 选择模型
+window.selectModel = function(modelName) {
+    const modelInput = document.querySelector('input[data-path="model"]');
+    if (modelInput) {
+        modelInput.value = modelName;
+        modelInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+        // 应用模型配置规则
+        applyModelConfig(modelName);
+
+        // 关闭模态框
+        closeModelQueryModal();
+        showToast(`已选择模型: ${modelName}`, 'success');
+    }
+};
+
+// 过滤模型列表
+window.filterModels = function() {
+    const searchInput = document.getElementById('modelSearchInput');
+    const modelList = document.getElementById('modelList');
+    if (!searchInput || !modelList) return;
+
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const modelButtons = modelList.querySelectorAll('button[type="button"]');
+
+    modelButtons.forEach(button => {
+        const modelName = button.querySelector('.font-medium').textContent.toLowerCase();
+        if (modelName.includes(searchTerm)) {
+            button.style.display = '';
+        } else {
+            button.style.display = 'none';
+        }
+    });
+};
+
+// 应用模型配置规则
+window.applyModelConfig = function(modelName) {
+    const rules = MODEL_CONFIG_RULES[modelName];
+    if (!rules) return;
+
+    // 应用 API Base（如果规则中有定义）
+    if (rules.api_base) {
+        const apiBaseInput = document.querySelector('input[data-path="api_base"]');
+        if (apiBaseInput && !apiBaseInput.value) {
+            apiBaseInput.value = rules.api_base;
+            apiBaseInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // 应用温度
+    if (rules.temperature !== undefined) {
+        const tempInput = document.querySelector('input[data-path="temperature"]');
+        if (tempInput) {
+            tempInput.value = rules.temperature;
+            tempInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    // 应用 Max Tokens
+    if (rules.max_tokens !== undefined) {
+        const tokensInput = document.querySelector('input[data-path="max_tokens"]');
+        if (tokensInput) {
+            tokensInput.value = rules.max_tokens;
+            tokensInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+};
+
+// --- End AI Model Query Logic ---

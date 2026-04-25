@@ -450,7 +450,7 @@ def render_html_content_v2(
             }}
 
             /* Light Styled AI Analysis Card (Bottom) */
-            .ai-card {
+            .ai-card {{
                 width: 100%;
                 background: rgba(255, 255, 255, 0.9);
                 backdrop-filter: blur(12px);
@@ -461,7 +461,7 @@ def render_html_content_v2(
                 margin-bottom: 30px;
                 border: 1px solid rgba(255, 255, 255, 0.3);
                 box-shadow: var(--shadow-md);
-            }
+            }}
 
             .ai-card .card-title {{ color: #0f172a; font-size: 24px; margin-bottom: 20px; display: block; }}
             .ai-content {{ 
@@ -502,6 +502,95 @@ def render_html_content_v2(
             .ai-error::before {{
                 content: "⚠️";
                 font-size: 18px;
+            }}
+
+            /* --- Search Styles --- */
+            .search-container {{
+                position: relative;
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+            }}
+
+            .search-input {{
+                width: 100%;
+                padding: 15px 45px 15px 50px;
+                border-radius: 30px;
+                border: 2px solid #e2e8f0;
+                font-size: 16px;
+                outline: none;
+                transition: all 0.3s;
+                background: #f8fafc;
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            }}
+
+            .search-input:focus {{
+                border-color: var(--accent-cyan);
+                background: #ffffff;
+                box-shadow: 0 0 0 4px rgba(0, 242, 255, 0.1);
+            }}
+
+            .search-icon {{
+                position: absolute;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #94a3b8;
+                font-size: 18px;
+            }}
+
+            .search-clear {{
+                position: absolute;
+                right: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #cbd5e1;
+                cursor: pointer;
+                font-size: 18px;
+                display: none;
+                transition: color 0.2s;
+            }}
+            .search-clear:hover {{ color: #f43f5e; }}
+
+            #search-results-container {{
+                margin-bottom: 40px;
+            }}
+
+            .search-header {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding: 0 20px;
+            }}
+
+            .search-header h2 {{
+                font-size: 20px;
+                color: #1e293b;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin: 0;
+            }}
+
+            .search-close-btn {{
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #475569;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }}
+
+            .search-close-btn:hover {{
+                background: #e2e8f0;
+                color: #0f172a;
             }}
 
             /* --- Visual Configuration Modal Styles --- */
@@ -667,10 +756,10 @@ def render_html_content_v2(
                         <option value="catppuccin">Catppuccin</option>
                     </select>
                 </div>
-                <div class="header-top-tag">AIYX DATA TECH NEWS POOL</div>
+                <div class="header-top-tag">AIYX DATA TECH RADAR</div>
                 <div class="header-main">
                     <div class="header-title-group">
-                        <h1 class="header-title">TECH NEWS 热点分析</h1>
+                        <h1 class="header-title">DATA RADAR 热点分析</h1>
                         <span class="version-tag">{version_tag}</span>
                     </div>
                     <div class="header-buttons">
@@ -683,7 +772,13 @@ def render_html_content_v2(
                     </div>
                 </div>
                 
-                <div class="meta-box">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="global-search" class="search-input" placeholder="输入关键词搜索历史资讯 (默认检索过去7天)..." autocomplete="off">
+                    <i class="fas fa-times-circle search-clear" id="search-clear-btn" onclick="clearSearch()"></i>
+                </div>
+                
+                <div class="meta-box" style="margin-top: 20px;">
                     <div class="meta-entry">
                         <span class="meta-key">NODE</span>
                         <span class="meta-val">{"当前榜单" if mode == "current" else "增量分析" if mode == "incremental" else "全天推总"}</span>
@@ -703,7 +798,18 @@ def render_html_content_v2(
                 </div>
             </header>
 
-            <div class="cards-grid">
+            <!-- Search Results Container -->
+            <div id="search-results-container" style="display: none;">
+                <div class="search-header">
+                    <h2><i class="fas fa-search"></i> 搜索结果: <span id="search-keyword-display"></span> (<span id="search-count-display">0</span> 条)</h2>
+                    <button class="search-close-btn" onclick="clearSearch()"><i class="fas fa-times"></i> 关闭搜索</button>
+                </div>
+                <div class="cards-grid" id="search-cards-grid">
+                    <!-- Search results will be injected here -->
+                </div>
+            </div>
+
+            <div class="cards-grid" id="main-cards-grid">
     """
 
     # AI Analysis moved to after grid
@@ -1019,6 +1125,151 @@ def render_html_content_v2(
                 document.addEventListener('mouseup', onMouseUp);
             }});
         }})();
+
+        // --- Search Functionality ---
+        let searchTimeout = null;
+        
+        document.addEventListener('DOMContentLoaded', () => {{
+            const searchInput = document.getElementById('global-search');
+            const clearBtn = document.getElementById('search-clear-btn');
+            
+            if (searchInput) {{
+                searchInput.addEventListener('input', (e) => {{
+                    const kw = e.target.value.trim();
+                    if (clearBtn) {{
+                        clearBtn.style.display = kw.length > 0 ? 'block' : 'none';
+                    }}
+                    
+                    if (searchTimeout) clearTimeout(searchTimeout);
+                    
+                    if (kw.length === 0) {{
+                        clearSearch();
+                        return;
+                    }}
+                    
+                    searchTimeout = setTimeout(() => {{
+                        performSearch(kw);
+                    }}, 500); // 500ms debounce
+                }});
+                
+                // Also trigger search on Enter, bypassing debounce
+                searchInput.addEventListener('keydown', (e) => {{
+                    if (e.key === 'Enter') {{
+                        e.preventDefault();
+                        const kw = e.target.value.trim();
+                        if (searchTimeout) clearTimeout(searchTimeout);
+                        if (kw.length > 0) {{
+                            performSearch(kw);
+                        }} else {{
+                            clearSearch();
+                        }}
+                    }}
+                }});
+            }}
+        }});
+        
+        function clearSearch() {{
+            const searchInput = document.getElementById('global-search');
+            const clearBtn = document.getElementById('search-clear-btn');
+            const searchResultsContainer = document.getElementById('search-results-container');
+            const mainCardsGrid = document.getElementById('main-cards-grid');
+            
+            if (searchInput) searchInput.value = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (searchResultsContainer) searchResultsContainer.style.display = 'none';
+            if (mainCardsGrid) mainCardsGrid.style.display = 'grid'; // Restore main grid
+        }}
+        
+        function performSearch(keyword) {{
+            const searchResultsContainer = document.getElementById('search-results-container');
+            const mainCardsGrid = document.getElementById('main-cards-grid');
+            const searchCardsGrid = document.getElementById('search-cards-grid');
+            const kwDisplay = document.getElementById('search-keyword-display');
+            const countDisplay = document.getElementById('search-count-display');
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'flex';
+            
+            fetch('/api/search?kw=' + encodeURIComponent(keyword))
+                .then(r => r.json())
+                .then(data => {{
+                    document.getElementById('loading').style.display = 'none';
+                    if (data.success) {{
+                        if (mainCardsGrid) mainCardsGrid.style.display = 'none';
+                        if (searchResultsContainer) searchResultsContainer.style.display = 'block';
+                        
+                        if (kwDisplay) kwDisplay.textContent = String(keyword).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        if (countDisplay) countDisplay.textContent = data.count || 0;
+                        
+                        renderSearchResults(data.data, searchCardsGrid);
+                    }} else {{
+                        alert('搜索失败/Search failed: ' + (data.error || 'Unknown Error'));
+                    }}
+                }})
+                .catch(e => {{
+                    console.error('Search error:', e);
+                    document.getElementById('loading').style.display = 'none';
+                    alert('网络或服务器错误/Network or Server Error');
+                }});
+        }}
+        
+        function renderSearchResults(dataObj, container) {{
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const neonColors = ["#00f2ff", "#ff00ff", "#39ff14", "#fff01f", "#ff3131", "#bc13fe", "#00d4ff"];
+            let idx = 0;
+            
+            for (const dateStr in dataObj) {{
+                if (!dataObj.hasOwnProperty(dateStr)) continue;
+                const items = dataObj[dateStr];
+                if (!items || items.length === 0) continue;
+                
+                const color = neonColors[idx % neonColors.length];
+                idx++;
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                let listHtml = '<ul class="news-list">';
+                items.forEach((news, i) => {{
+                    const title = news.title || 'Untitled';
+                    const url = news.url || '#';
+                    const source = news.source_name || 'News';
+                    const timeDisp = news.time_display || '';
+                    
+                    const safeTitle = String(title).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const safeUrl = String(url).replace(/"/g, '&quot;');
+                    
+                    const timeHtml = timeDisp ? '<span class="time-tag" style="margin-left: 10px;">🕒 ' + timeDisp + '</span>' : '';
+                    const rankStr = (i+1).toString().padStart(2, '0');
+                    
+                    listHtml += '<li class="news-item">';
+                    listHtml += '    <span class="news-rank">' + rankStr + '</span>';
+                    listHtml += '    <div class="news-content">';
+                    listHtml += '        <a href="' + safeUrl + '" class="news-title-link" target="_blank">' + safeTitle + '</a>';
+                    listHtml += '        <div class="news-meta">';
+                    listHtml += '            <span class="source-tag">' + String(source).replace(/</g, '&lt;') + '</span>';
+                    listHtml += '            ' + timeHtml;
+                    listHtml += '        </div>';
+                    listHtml += '    </div>';
+                    listHtml += '</li>';
+                }});
+                listHtml += '</ul>';
+                
+                card.innerHTML = '<div class="card-header" style="border-top-color: ' + color + '">' +
+                                 '<span class="card-title"><span style="color: ' + color + '">📅</span> ' + dateStr + '</span>' +
+                                 '<span class="card-count">' + items.length + ' items</span>' +
+                                 '</div>' +
+                                 '<div class="card-body">' + listHtml + '</div>';
+                
+                container.appendChild(card);
+            }}
+            
+            if (idx === 0) {{
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; font-weight: 600; color: #64748b; padding: 60px;">暂无相关搜索结果 / No results found</div>';
+            }}
+        }}
     </script>
         </div>
 

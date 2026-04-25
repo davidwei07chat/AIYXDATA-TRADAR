@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrendRadar 配置文件编辑器</title>
+    <title>AiYX Data Radar 配置文件编辑器</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -20,10 +20,10 @@
     <!-- 顶部导航 -->
     <nav class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0 z-20">
         <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-            <a href="https://github.com/AIYXDATA/TrendRadar" target="_blank" class="flex items-center gap-3 hover:opacity-80 transition-opacity flex-shrink-0">
+            <div class="flex items-center gap-3 flex-shrink-0">
                 <i class="fa-solid fa-sliders text-blue-600 text-lg"></i>
-                <span class="font-bold text-lg tracking-tight text-gray-900">TrendRadar <span class="hidden xl:inline text-gray-500 text-xs font-normal ml-2">可视化配置编辑器 </span></span>
-            </a>
+                <span class="font-bold text-lg tracking-tight text-gray-900 select-text cursor-text">AiYX Data Radar</span>
+            </div>
 
             <!-- 隐私安全提示 -->
             <div class="hidden 2xl:flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100 select-none mx-4">
@@ -32,12 +32,12 @@
             </div>
 
             <div class="flex items-center gap-1.5 flex-nowrap overflow-x-auto no-scrollbar py-2">
-                <button onclick="reloadAllConfigsFromServer()" class="text-[11px] text-orange-600 hover:bg-orange-50 border border-orange-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-sync"></i>读取配置</button>
+                <button id="btn-reload" onclick="reloadAllConfigsFromServer()" class="text-[11px] text-orange-600 hover:bg-orange-50 border border-orange-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-sync"></i>读取配置</button>
                 <div class="h-6 w-px bg-gray-200 mx-0.5"></div>
                 <button id="lock-toggle-btn" onclick="toggleGlobalLock()" class="text-[11px] text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-bold whitespace-nowrap"><i class="fa-solid fa-lock"></i>锁定编辑</button>
-                <button onclick="openLoadConfigModal()" class="text-[11px] text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-cloud-arrow-down"></i>加载默认</button>
-                <button onclick="openLoadProfileModal()" class="text-[11px] text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-folder-open"></i>提取方案</button>
-                <button onclick="openSaveProfileModal()" class="text-[11px] text-teal-600 hover:bg-teal-50 border border-teal-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-floppy-disk"></i>保存方案</button>
+                <button id="btn-load-default" onclick="openLoadConfigModal()" class="text-[11px] text-blue-600 hover:bg-blue-50 border border-blue-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-cloud-arrow-down"></i>加载默认</button>
+                <button id="btn-load-profile" onclick="openLoadProfileModal()" class="text-[11px] text-indigo-600 hover:bg-indigo-50 border border-indigo-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-folder-open"></i>提取方案</button>
+                <button id="btn-save-profile" onclick="openSaveProfileModal()" class="text-[11px] text-teal-600 hover:bg-teal-50 border border-teal-200 px-2 py-1.5 rounded transition-colors flex items-center gap-1 shadow-sm font-medium whitespace-nowrap"><i class="fa-solid fa-floppy-disk"></i>保存方案</button>
                 <div class="h-6 w-px bg-gray-200 mx-0.5"></div>
                 <!-- 主题选择 -->
                 <div class="relative group">
@@ -56,9 +56,9 @@
                     </div>
                 </div>
                 <div class="h-6 w-px bg-gray-200 mx-0.5"></div>
-                <button onclick="copyResult()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors shadow-sm whitespace-nowrap"><i class="fa-regular fa-copy mr-1"></i>复制</button>
-                <button onclick="applyToBackend()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 whitespace-nowrap"><i class="fa-solid fa-check-circle"></i>APPLY 应用同步</button>
-                <button onclick="saveAndRefresh()" class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 whitespace-nowrap"><i class="fa-solid fa-play-circle"></i>SAVE & RUN 立即分析</button>
+                <button id="btn-copy" onclick="copyResult()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors shadow-sm whitespace-nowrap"><i class="fa-regular fa-copy mr-1"></i>复制</button>
+                <button id="btn-apply" onclick="applyToBackend()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 whitespace-nowrap"><i class="fa-solid fa-check-circle"></i>APPLY 应用同步</button>
+                <button id="btn-save-run" onclick="saveAndRefresh()" class="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-1 whitespace-nowrap"><i class="fa-solid fa-play-circle"></i>SAVE & RUN 立即分析</button>
             </div>
         </div>
     </nav>

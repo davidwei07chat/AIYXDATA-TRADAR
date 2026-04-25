@@ -182,6 +182,38 @@ class LocalStorageBackend(SQLiteStorageMixin, StorageBackend):
             return []
         return self._get_crawl_times_impl(date)
 
+    def search_news(self, keyword: str, days: int = 7) -> List[NewsItem]:
+        """
+        跨日期搜索新闻
+
+        Args:
+            keyword: 搜索关键词
+            days: 搜索过去几天的数据
+
+        Returns:
+            匹配的新闻条目列表
+        """
+        all_results = []
+        # 从今天开始往回找
+        today = self._get_configured_time()
+        
+        for i in range(days):
+            target_date = today - timedelta(days=i)
+            date_str = target_date.strftime("%Y-%m-%d")
+            
+            # 检查该日期数据库是否存在
+            db_path = self._get_db_path(date_str)
+            if db_path.exists():
+                results = self._search_news_impl(keyword, date_str)
+                # 为搜索结果添加日期前缀（如果需要区分）
+                for item in results:
+                    item.crawl_time = f"{date_str} {item.crawl_time}"
+                all_results.extend(results)
+                
+        # 按时间降序排列
+        all_results.sort(key=lambda x: x.last_time, reverse=True)
+        return all_results
+
     # ========================================
     # 时间段执行记录（调度系统）
     # ========================================

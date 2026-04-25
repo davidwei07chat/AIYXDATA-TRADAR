@@ -21,7 +21,7 @@ app:
 # ===============================================================
 schedule:
   enabled: true                         # 是否启用调度系统
-  preset: "morning_evening"             # 预设模板名称
+  preset: "custom"             # 预设模板名称
 
 
 # ===============================================================
@@ -50,6 +50,8 @@ platforms:
       name: "微博"
     - id: "douyin"
       name: "抖音"
+    - id: "zhihu"
+      name: "知乎"
 
 
 
@@ -60,27 +62,38 @@ rss:
   enabled: true                       # 是否启用 RSS 抓取
   freshness_filter:
     enabled: true                     # 是否启用新鲜度过滤
-    max_age_days: 3                   # 最大文章年龄（天）
+    max_age_days: 5                   # 最大文章年龄（天）
 
   feeds:
     - id: "hacker-news"
       name: "Hacker News"
       url: "https://hnrss.org/frontpage"
+
     - id: "ruanyifeng"
       name: "阮一峰的网络日志"
       url: "http://www.ruanyifeng.com/blog/atom.xml"
+
     - id: "36KR"
       name: "36KR"
       url: "https://www.bing.com/news/search?q=人工智能&format=RSS"
+
     - id: "Hacker News Launches"
       name: "Hacker News Launches"
       url: "https://hnrss.org/launches"
+
     - id: "baiduhot"
       name: "百度实时热点"
       url: "https://top.baidu.com/board?tab=realtime"
+
     - id: "ftchinese"
       name: "FT中文网 - 今日焦点"
       url: "http://www.ftchinese.com/rss/news"
+
+    - id: "36kr"
+      name: "36氪"
+      url: "https://36kr.com/feed-newsflash"
+      max_age_days: 3
+
 
 
 # ===============================================================
@@ -112,7 +125,7 @@ display:
     ai_analysis: true
   standalone:
     platforms: ["zhihu","wallstreetcn-hot","toutiao","baidu","thepaper","cls-hot"]
-    rss_feeds: ["ruanyifeng","36KR","Hacker News Launches","baiduhot","ftchinese","hacker-news"]
+    rss_feeds: ["ruanyifeng","36KR","Hacker News Launches","baiduhot","ftchinese","hacker-news","36kr"]
     max_items: 20
 
 
@@ -175,11 +188,11 @@ storage:
 # 8. AI 模型配置
 # ===============================================================
 ai:
-  model: "openai/deepseek-ai/DeepSeek-V3"
+  model: "Pro/moonshotai/Kimi-K2.6"
   api_base: "https://api.siliconflow.cn/v1"
-  api_key: "YOUR_API_KEY"
-  timeout: 150
-  temperature: 2
+  api_key: "sk-rgpqttlpjlxowrmcfwseqsckovdivaipzcihjlrctidilmvw"
+  timeout: 600
+  temperature: 1
   max_tokens: 10000
   num_retries: 1
   fallback_models: []

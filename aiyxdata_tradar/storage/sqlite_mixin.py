@@ -691,6 +691,61 @@ class SQLiteStorageMixin:
             print(f"[存储] 获取抓取时间列表失败: {e}")
             return []
 
+    def _search_news_impl(self, keyword: str, date: Optional[str] = None) -> List[NewsItem]:
+        """
+        在指定日期的数据库中搜索新闻
+
+        Args:
+            keyword: 搜索关键词
+            date: 日期字符串
+
+        Returns:
+            匹配的新闻条目列表
+        """
+        try:
+            conn = self._get_connection(date)
+            cursor = conn.cursor()
+
+            # 使用 LIKE 进行模糊匹配
+            cursor.execute("""
+                SELECT n.id, n.title, n.platform_id, p.name as platform_name,
+                       n.rank, n.url, n.mobile_url,
+                       n.first_crawl_time, n.last_crawl_time, n.crawl_count
+                FROM news_items n
+                LEFT JOIN platforms p ON n.platform_id = p.id
+                WHERE n.title LIKE ?
+                ORDER BY n.last_crawl_time DESC, n.rank ASC
+            """, (f"%{keyword}%",))
+
+            rows = cursor.fetchall()
+            if not rows:
+                return []
+
+            # 收集结果
+            results = []
+            for row in rows:
+                platform_id = row[2]
+                platform_name = row[3] or platform_id
+                
+                results.append(NewsItem(
+                    title=row[1],
+                    source_id=platform_id,
+                    source_name=platform_name,
+                    rank=row[4],
+                    url=row[5] or "",
+                    mobile_url=row[6] or "",
+                    crawl_time=row[8],
+                    ranks=[row[4]], # 搜索结果中简化处理排名历史
+                    first_time=row[7],
+                    last_time=row[8],
+                    count=row[9],
+                    rank_timeline=[]
+                ))
+            return results
+        except Exception as e:
+            print(f"[存储] 搜索数据失败 ({date}): {e}")
+            return []
+
     # ========================================
     # 时间段执行记录（调度系统）
     # ========================================

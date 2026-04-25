@@ -17,6 +17,10 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 import re
+import random
+import html
+import uuid
+import datetime as datetime_module
 
 # Web 服务器配置 (Web Server Config)
 WEBSERVER_PORT = int(os.environ.get("WEBSERVER_PORT", "8080"))
@@ -31,8 +35,8 @@ def detect_path(env_key, default_paths):
             return p
     return default_paths[0]
 
-WEBSERVER_DIR = detect_path("WEBSERVER_DIR", ["/app/output", "/AIYXDATA-TRADAR/output", "./output"])
-CONFIG_DIR = Path(detect_path("CONFIG_DIR", ["/app/config", "/AIYXDATA-TRADAR/config", "./config"]))
+WEBSERVER_DIR = detect_path("WEBSERVER_DIR", ["/app/output", "/AIYXDATA-TRADAR/output", "/TrendRadar/output", "./output"])
+CONFIG_DIR = Path(detect_path("CONFIG_DIR", ["/TrendRadar/config", "/app/config", "/AIYXDATA-TRADAR/config", "./config"]))
 PROFILES_DIR = CONFIG_DIR / "profiles"
 
 # 确保 profiles 目录存在 (Ensure profiles directory exists)
@@ -64,6 +68,37 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(data).encode('utf-8'))
+
+    def get_data_version(self):
+        """获取数据版本时间戳 (Get data version timestamp)"""
+        try:
+            latest_time = None
+            db_dirs = [Path("/app/output/rss"), Path("/app/output/news")]
+
+            for db_dir in db_dirs:
+                if not db_dir.exists():
+                    continue
+                for db_file in db_dir.glob("*.db"):
+                    mtime = db_file.stat().st_mtime
+                    if latest_time is None or mtime > latest_time:
+                        latest_time = mtime
+
+            if latest_time:
+                return datetime.fromtimestamp(latest_time).isoformat()
+            return datetime.now().isoformat()
+        except Exception as e:
+            print(f"[API] 获取数据版本出错: {e}")
+            return datetime.now().isoformat()
+
+    def search_database(self, keywords, days):
+        """搜索数据库 (Search database)"""
+        try:
+            # 简单实现：返回空结果
+            # 实际应用中应连接真实数据库
+            return {}
+        except Exception as e:
+            print(f"[API] 搜索数据库出错: {e}")
+            return None
 
     def do_GET(self):
         """处理自定义 GET 路由 (Handle custom GET routes)"""
@@ -146,7 +181,216 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 return self.send_json_response(500, {"success": False, "error": str(e)})
 
-        # 默认回退给静态文件服务器处理 (Fallback to static file server)
+        # 3. 实时关键词搜索 (Real-time keyword search)
+        elif path == '/api/search':
+            query_params = urllib.parse.parse_qs(parsed_path.query)
+            keyword = query_params.get('kw', [''])[0].strip()
+            days = int(query_params.get('days', ['3650'])[0])  # 默认10年以获取所有数据
+
+            if not keyword or len(keyword) > 100:
+                return self.send_json_response(400, {"success": False, "error": "Invalid keyword"})
+
+            try:
+                import sqlite3
+                from datetime import datetime, timedelta
+
+                # 分割多关键词
+                keywords = [k.strip() for k in keyword.split() if k.strip()]
+                if not keywords:
+                    return self.send_json_response(400, {"success": False, "error": "Empty keywords"})
+
+                # 计算时间范围
+                now = datetime.now()
+                days_ago = now - timedelta(days=max(1, min(days, 3650)))
+                days_ago_timestamp = int(days_ago.timestamp())  # 秒级时间戳
+
+                # 搜索数据库
+                all_results = []
+
+                # 查找所有数据库文件
+                db_dirs = [
+                    Path(WEBSERVER_DIR) / "rss",
+                    Path(WEBSERVER_DIR) / "news"
+                ]
+
+                db_files = []
+                for db_dir in db_dirs:
+                    if db_dir.exists():
+                        db_files.extend(db_dir.glob("*.db"))
+
+                # 搜索所有数据库
+                for db_path in sorted(db_files, reverse=True):
+                    try:
+                        conn = sqlite3.connect(str(db_path))
+                        conn.row_factory = sqlite3.Row
+                        cursor = conn.cursor()
+
+                        # 检查表结构
+                        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+                        tables = [t[0] for t in cursor.fetchall()]
+
+                        # 执行搜索 - 支持多关键词
+                        for kw in keywords:
+                            if 'rss_items' in tables:
+                                # RSS数据库结构
+                                query = """
+                                SELECT i.title, i.url, i.feed_id, f.name as source, i.published_at
+                                FROM rss_items i
+                                LEFT JOIN rss_feeds f ON i.feed_id = f.id
+                                WHERE (i.title LIKE ? OR i.summary LIKE ?)
+                                AND i.published_at >= ?
+                                ORDER BY i.published_at DESC
+                                """
+                                params = (f'%{kw}%', f'%{kw}%', days_ago.isoformat())
+                            elif 'news_items' in tables:
+                                # News数据库结构
+                                query = """
+                                SELECT i.title, i.url, i.platform_id, p.name as source, i.first_crawl_time as published_at
+                                FROM news_items i
+                                LEFT JOIN platforms p ON i.platform_id = p.id
+                                WHERE (i.title LIKE ?)
+                                AND i.first_crawl_time >= ?
+                                ORDER BY i.first_crawl_time DESC
+                                """
+                                params = (f'%{kw}%', days_ago.isoformat())
+                            else:
+                                continue
+
+                            cursor.execute(query, params)
+                            rows = cursor.fetchall()
+
+                            for row in rows:
+                                all_results.append({
+                                    'title': row['title'],
+                                    'url': row['url'],
+                                    'source_name': row['source'] or row.get('feed_id') or row.get('platform_id'),
+                                    'published_at': row['published_at']
+                                })
+
+                        conn.close()
+                    except Exception as e:
+                        print(f"[API] 搜索数据库 {db_path} 出错: {e}")
+
+                # 去重
+                seen = set()
+                unique_results = []
+                for item in all_results:
+                    key = (item['title'], item['url'])
+                    if key not in seen:
+                        seen.add(key)
+                        unique_results.append(item)
+
+                # 按时间排序
+                unique_results.sort(key=lambda x: x['published_at'], reverse=True)
+
+                # 按source_name分组
+                items_dict = {}
+                for item in unique_results:
+                    source = item['source_name']
+                    if source not in items_dict:
+                        items_dict[source] = []
+                    items_dict[source].append(item)
+
+                return self.send_json_response(200, {
+                    "success": True,
+                    "data": items_dict,
+                    "count": len(unique_results),
+                    "keywords": keywords,
+                    "search_time": datetime.now().isoformat(),
+                    "data_version": self.get_data_version()
+                })
+            except Exception as e:
+                import traceback
+                print(f"[API] 搜索功能出错: {e}")
+                traceback.print_exc()
+                return self.send_json_response(500, {"success": False, "error": str(e)})
+
+        # 4. 搜索历史 (Search history)
+        elif path == '/api/search_history':
+            try:
+                history_file = Path(WEBSERVER_DIR) / "data" / "search_history.json"
+
+                # GET: 获取搜索历史
+                if self.command == 'GET':
+                    if not history_file.exists():
+                        return self.send_json_response(200, {"success": True, "searches": []})
+
+                    with open(history_file, 'r', encoding='utf-8') as f:
+                        loaded = json.load(f)
+
+                    # Handle both old array format and new object format
+                    if isinstance(loaded, list):
+                        searches = loaded
+                    else:
+                        searches = loaded.get("searches", [])
+
+                    return self.send_json_response(200, {
+                        "success": True,
+                        "searches": searches[-20:] if len(searches) > 20 else searches
+                    })
+
+                # POST: 保存搜索历史
+                elif self.command == 'POST':
+                    content_length = int(self.headers.get('Content-Length', 0))
+                    body = self.rfile.read(content_length).decode('utf-8')
+                    data = json.loads(body)
+                    keyword = data.get('keyword', '').strip()
+
+                    if not keyword:
+                        return self.send_json_response(400, {"success": False, "error": "Empty keyword"})
+
+                    # 创建data目录
+                    history_file.parent.mkdir(parents=True, exist_ok=True)
+
+                    # 读取现有历史
+                    searches = []
+                    if history_file.exists():
+                        with open(history_file, 'r', encoding='utf-8') as f:
+                            loaded = json.load(f)
+                        if isinstance(loaded, list):
+                            searches = loaded
+                        else:
+                            searches = loaded.get("searches", [])
+
+                    # 添加新搜索记录
+                    new_search = {
+                        "keyword": keyword,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    searches.insert(0, new_search)
+
+                    # 保存历史（最多保留50条）
+                    with open(history_file, 'w', encoding='utf-8') as f:
+                        json.dump({"searches": searches[:50]}, f, ensure_ascii=False, indent=2)
+
+                    return self.send_json_response(200, {"success": True})
+
+            except Exception as e:
+                return self.send_json_response(500, {"success": False, "error": str(e)})
+
+        # 5. 获取报告详情 (Get report details)
+        elif path.startswith('/api/report/'):
+            try:
+                report_id = path.split('/')[-1]
+
+                # 验证报告ID格式（防止路径遍历）
+                if not re.match(r'^report_\d{8}_\d{6}_\d{4}$', report_id):
+                    return self.send_json_response(400, {"success": False, "error": "Invalid report ID"})
+
+                report_file = Path(WEBSERVER_DIR) / "data" / "reports" / f"{report_id}.json"
+
+                if not report_file.exists():
+                    return self.send_json_response(404, {"success": False, "error": "Report not found"})
+
+                with open(report_file, 'r', encoding='utf-8') as f:
+                    report_data = json.load(f)
+
+                return self.send_json_response(200, {
+                    "success": True,
+                    "data": report_data
+                })
+            except Exception as e:
+                return self.send_json_response(500, {"success": False, "error": str(e)})
         return super().do_GET()
 
     def do_POST(self):
@@ -344,6 +588,153 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
                     return self.send_json_response(200, {"success": False, "error": f"API 返回错误 ({response.status_code})"})
             except Exception as e:
                 return self.send_json_response(200, {"success": False, "error": f"获取失败: {str(e)}"})
+
+        # 6. 生成报告 (Generate Report)
+        elif path == '/api/generate_report':
+            try:
+                keywords = payload.get('keywords', [])
+                days = payload.get('days', 7)
+
+                if not keywords or not isinstance(keywords, list):
+                    return self.send_json_response(400, {"success": False, "error": "Invalid keywords"})
+
+                keywords = [kw.strip() for kw in keywords if isinstance(kw, str) and kw.strip()]
+                if not keywords:
+                    return self.send_json_response(400, {"success": False, "error": "Empty keywords"})
+
+                if not isinstance(days, int) or days < 1 or days > 30:
+                    return self.send_json_response(400, {"success": False, "error": "Days must be 1-30"})
+
+                # 执行搜索 (Execute search with same logic as /api/search)
+                import sqlite3
+                from datetime import datetime, timedelta
+
+                now = datetime.now()
+                days_ago = now - timedelta(days=max(1, min(days, 30)))
+                days_ago_str = days_ago.isoformat()
+
+                all_results = []
+                db_dirs = [Path("/app/output/rss"), Path("/app/output/news")]
+
+                for db_dir in db_dirs:
+                    if not db_dir.exists():
+                        continue
+
+                    for db_file in sorted(db_dir.glob("*.db"), reverse=True):
+                        try:
+                            conn = sqlite3.connect(str(db_file))
+                            conn.row_factory = sqlite3.Row
+                            cursor = conn.cursor()
+
+                            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='rss_items';")
+                            if not cursor.fetchone():
+                                conn.close()
+                                continue
+
+                            for kw in keywords:
+                                query = """
+                                SELECT title, url, feed_id as source_name, published_at
+                                FROM rss_items
+                                WHERE title LIKE ?
+                                AND published_at >= ?
+                                ORDER BY published_at DESC
+                                """
+                                cursor.execute(query, (f'%{kw}%', days_ago_str))
+                                rows = cursor.fetchall()
+
+                                for row in rows:
+                                    all_results.append({
+                                        'title': row['title'],
+                                        'url': row['url'],
+                                        'source_name': row['source_name'],
+                                        'published_at': row['published_at']
+                                    })
+
+                            conn.close()
+                        except Exception as e:
+                            print(f"[API] 搜索数据库出错 {db_file}: {e}")
+                            continue
+
+                # 去重
+                seen = set()
+                unique_results = []
+                for item in all_results:
+                    key = (item['title'], item['url'])
+                    if key not in seen:
+                        seen.add(key)
+                        unique_results.append(item)
+
+                # 按时间排序
+                unique_results.sort(key=lambda x: x['published_at'], reverse=True)
+
+                # 按source_name分组
+                search_results = {}
+                for item in unique_results:
+                    source = item['source_name']
+                    if source not in search_results:
+                        search_results[source] = []
+                    search_results[source].append(item)
+
+                # 生成报告ID
+                report_id = f"report_{now.strftime('%Y%m%d')}_{now.strftime('%H%M%S')}_{random.randint(1000, 9999)}"
+
+                # 准备报告数据
+                report_data = {
+                    "id": report_id,
+                    "keywords": keywords,
+                    "days": days,
+                    "created_at": now.isoformat(),
+                    "data_version": self.get_data_version(),
+                    "result_count": len(unique_results),
+                    "results": search_results
+                }
+
+                # 保存报告
+                reports_dir = Path(WEBSERVER_DIR) / "data" / "reports"
+                reports_dir.mkdir(parents=True, exist_ok=True)
+
+                report_file = reports_dir / f"{report_id}.json"
+                with open(report_file, 'w', encoding='utf-8') as f:
+                    json.dump(report_data, f, ensure_ascii=False, indent=2)
+
+                # 更新搜索历史
+                history_file = Path(WEBSERVER_DIR) / "data" / "search_history.json"
+                history_data = {"searches": []}
+
+                if history_file.exists():
+                    with open(history_file, 'r', encoding='utf-8') as f:
+                        loaded = json.load(f)
+                        # Handle both old array format and new object format
+                        if isinstance(loaded, list):
+                            history_data = {"searches": loaded}
+                        else:
+                            history_data = loaded
+
+                history_data["searches"].insert(0, {
+                    "id": report_id,
+                    "keywords": keywords,
+                    "created_at": now.isoformat(),
+                    "result_count": report_data["result_count"],
+                    "days": days
+                })
+
+                # 保留最近100条记录
+                history_data["searches"] = history_data["searches"][:100]
+
+                with open(history_file, 'w', encoding='utf-8') as f:
+                    json.dump(history_data, f, ensure_ascii=False, indent=2)
+
+                return self.send_json_response(200, {
+                    "success": True,
+                    "report_id": report_id,
+                    "report_url": f"/report.html?id={report_id}",
+                    "result_count": report_data["result_count"]
+                })
+            except Exception as e:
+                import traceback
+                print(f"[API] 生成报告出错: {e}")
+                traceback.print_exc()
+                return self.send_json_response(500, {"success": False, "error": str(e)})
 
         else:
             return self.send_json_response(404, {"success": False, "error": f"API endpoint {path} not found."})

@@ -410,6 +410,20 @@ class StorageBackend(ABC):
         pass
 
     @abstractmethod
+    def search_news(self, keyword: str, days: int = 7) -> List[NewsItem]:
+        """
+        跨日期搜索新闻
+
+        Args:
+            keyword: 搜索关键词
+            days: 搜索过去几天的数据
+
+        Returns:
+            匹配的新闻条目列表
+        """
+        pass
+
+    @abstractmethod
     def cleanup_old_data(self, retention_days: int) -> int:
         """
         清理过期数据

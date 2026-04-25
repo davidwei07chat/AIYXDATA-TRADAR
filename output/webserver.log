@@ -2816,3 +2816,729 @@ BrokenPipeError: [Errno 32] Broken pipe
 172.20.0.1 - - [09/Apr/2026 11:25:14] "GET /config_editor/index.html HTTP/1.1" 200 -
 172.20.0.1 - - [09/Apr/2026 11:25:14] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
 172.20.0.1 - - [09/Apr/2026 11:25:14] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+✅ AIYXDATA-TRADAR 自定义配置服务器已启动 / Custom Config Web Server started
+🌐 端口 / Port: 8080
+📁 根目录 / Root Dir: /app/output
+🔒 支持 API 保存功能 / Contains config save APIs
+--------------------------------------------------
+172.20.0.1 - - [09/Apr/2026 22:34:35] "HEAD / HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:18:27] "HEAD / HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:18:35] "HEAD / HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:14] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:15] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:17] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:17] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:17] code 404, message File not found
+172.20.0.1 - - [10/Apr/2026 10:35:17] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [10/Apr/2026 10:35:37] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:37] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:37] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 10:35:37] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:03:59] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:04:01] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:04:02] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:04:02] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:16:46] "HEAD / HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:56:58] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:56:58] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [10/Apr/2026 14:56:58] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [11/Apr/2026 17:04:45] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:15:35] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:15:35] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:15:36] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:15:36] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:15:36] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 15:15:36] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [12/Apr/2026 15:47:39] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:47:45] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:47:46] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:47:46] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 15:47:56] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 15:47:56] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [12/Apr/2026 17:03:05] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:14:54] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:14:54] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:14:54] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:14:54] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:14:55] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:14:55] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:14:55] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:16:08] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:16:08] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:16:08] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:28] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:28] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:29] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:29] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:32] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:32] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:32] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:32] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:32] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:37] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:37] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:37] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:37] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:22:37] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:26:39] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:26:39] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:26:40] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:26:40] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:44] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:45] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:45] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:45] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:46] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:47] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:47] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:47] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:54] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 19:28:54] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [12/Apr/2026 19:28:54] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:54] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:54] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:54] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:28:54] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:29:41] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:29:41] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:29:42] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:29:42] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:29:48] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 19:29:48] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [12/Apr/2026 19:30:53] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:30:53] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:30:53] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:30:53] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 19:30:53] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:03] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:04] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:04] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:04] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:06] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:07] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:07] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:07] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:11] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:11] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:11] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:11] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:11] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:15] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 20:09:15] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [12/Apr/2026 20:09:27] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:27] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:27] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:09:27] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:30:56] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:30:57] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:30:57] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:30:57] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:31:03] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 20:31:03] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [12/Apr/2026 20:31:50] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:31:50] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:31:50] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 20:31:50] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:04] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:04] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:05] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:05] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:06] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:07] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:07] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:07] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:37:14] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 22:37:14] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [12/Apr/2026 22:39:03] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:39:03] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:39:03] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:39:03] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:54:44] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:54:44] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:54:45] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:54:45] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:02] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:03] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:03] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:03] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:34] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:35] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:35] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:35] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [12/Apr/2026 22:55:42] code 404, message File not found
+172.20.0.1 - - [12/Apr/2026 22:55:42] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:12:33] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:12:34] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:12:35] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:12:36] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:12:39] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:12:39] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:21:28] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:32] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:35] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:36] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:44] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:45] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:45] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:46] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:46] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:47] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:51] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:51] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:21:51] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:21:51] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:21:53] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:21:53] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:21:54] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:21:54] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:21:55] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:21:55] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:21:58] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:21:58] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:21:59] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:21:59] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:01] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:22:01] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:22:01] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:22:03] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:03] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:07] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:07] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:08] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:08] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:10] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:10] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:15] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:15] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:47] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:22:48] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:22:50] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:22:50] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 11:22:55] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:55] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:56] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:56] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:58] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:58] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:22:59] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:22:59] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 11:23:02] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 11:23:02] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 12:58:19] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 12:58:20] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 12:58:22] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 12:58:22] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 12:58:25] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 12:58:25] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 14:39:55] "HEAD / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 14:39:55] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:07] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:07] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:07] "GET /html/latest/daily.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:08] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:08] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:11] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:12] "GET /html/latest/daily.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:12] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:12] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:12] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 15:45:12] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 15:45:12] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 16:42:37] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 16:42:38] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 16:42:38] "GET /html/latest/daily.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 16:42:39] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 16:42:39] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 17:20:50] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:08:30] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:08:32] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:08:32] "GET /html/latest/daily.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:08:32] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:08:32] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:08:58] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 18:08:58] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 18:09:00] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:09:00] "GET /html/latest/daily.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:09:00] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:09:01] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:09:01] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:33:13] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:33:14] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:33:15] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 18:33:15] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:43:11] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:43:12] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:43:13] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:43:13] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:43:15] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 19:43:15] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [13/Apr/2026 19:44:03] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:44:06] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:44:07] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:44:08] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [13/Apr/2026 19:44:13] code 404, message File not found
+172.20.0.1 - - [13/Apr/2026 19:44:13] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [14/Apr/2026 17:03:17] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [15/Apr/2026 14:13:51] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [15/Apr/2026 14:13:52] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [15/Apr/2026 14:13:53] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [15/Apr/2026 14:13:54] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [15/Apr/2026 14:13:59] code 404, message File not found
+172.20.0.1 - - [15/Apr/2026 14:13:59] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [16/Apr/2026 10:09:46] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [16/Apr/2026 10:09:47] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [16/Apr/2026 10:09:48] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [16/Apr/2026 10:09:48] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [16/Apr/2026 10:09:49] code 404, message File not found
+172.20.0.1 - - [16/Apr/2026 10:09:49] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:20] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:20] "GET /robots.txt HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:20] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:20] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:20] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:20] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:20] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:20] "GET /robots.txt HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:20] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:20] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:44] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:44] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:44] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:44] "GET /robots.txt HTTP/1.1" 404 -
+172.20.0.1 - - [17/Apr/2026 18:00:44] code 404, message File not found
+172.20.0.1 - - [17/Apr/2026 18:00:44] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [18/Apr/2026 08:02:59] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:02:59] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:03:00] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:03:00] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:03:00] code 404, message File not found
+172.20.0.1 - - [18/Apr/2026 08:03:00] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [18/Apr/2026 08:11:38] code 400, message Bad request version ('À\\x13À')
+172.20.0.1 - - [18/Apr/2026 08:11:38] "\x16\x03\x01\x02\x19\x01\x00\x02\x15\x03\x03¼²¹ÓR¡¨A\x12pd\x9b\x9c\x04ØÛ\x15\x0fÉ2Øt)WóßrÏ?ÙÁ® ð\x92º\x92wàûöOÜ\x99Æ9A\x14Çn{\x85ù|x\x9db\x14°¹Çaà±O\x00"\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x09À\x13À" 400 -
+172.20.0.1 - - [18/Apr/2026 08:12:33] code 400, message Bad request version ('À\\x13À')
+172.20.0.1 - - [18/Apr/2026 08:12:33] "\x16\x03\x01\x02\x00\x01\x00\x01ü\x03\x03X[\x8fÊíÿw^PÈÈ¾(>UÕ)«¡\x86\x0d\x96«õªà\x0eã\x88\x95\x7f1 A\x11{øs\x0c\x0d{@8á\x19@<\x97fÃbÃÄ\x17W.8_\x1aÐÁ!'a{\x00"\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x09À\x13À" 400 -
+172.20.0.1 - - [18/Apr/2026 08:17:01] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:17:02] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:17:02] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:17:02] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:17:03] code 404, message File not found
+172.20.0.1 - - [18/Apr/2026 08:17:03] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [18/Apr/2026 08:22:28] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:22:28] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:22:29] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 08:22:29] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:53:49] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:53:49] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:53:50] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:53:50] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:56:12] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:56:12] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:56:12] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 09:56:12] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:12] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:13] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:13] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:13] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:25] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:26] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:26] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:26] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:12:27] code 404, message File not found
+172.20.0.1 - - [18/Apr/2026 11:12:27] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [18/Apr/2026 11:13:11] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:13:11] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:13:12] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 11:13:12] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 18:11:47] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 18:11:49] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 18:11:49] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 18:11:49] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 18:11:50] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 18:11:52] code 404, message File not found
+172.20.0.1 - - [18/Apr/2026 18:11:52] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [18/Apr/2026 19:33:59] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 19:34:00] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 19:34:01] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 19:34:01] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [18/Apr/2026 19:34:03] code 404, message File not found
+172.20.0.1 - - [18/Apr/2026 19:34:03] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 09:12:51] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:12:51] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:12:52] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:12:52] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:12:52] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 09:12:52] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 09:13:06] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:13:12] "POST /api/profiles/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:13:13] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:28:51] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:28:52] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:28:53] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:28:53] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:28:54] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 09:28:54] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 09:43:41] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:43:41] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:43:41] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:43:41] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:44:20] "POST /api/profiles/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:44:21] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:44:27] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:44:29] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:51:56] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:51:57] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:51:58] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:51:58] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:52:00] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 09:52:00] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 09:53:37] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:53:37] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:53:37] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:53:37] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:53:37] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:54:40] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:54:41] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:54:41] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:54:42] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:54:42] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:55:42] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:55:42] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:55:42] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:55:42] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 09:55:42] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:20] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:20] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:20] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:20] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:20] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:41] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:41] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:41] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:41] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:41] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:00:41] "POST /api/refresh HTTP/1.1" 200 -
+🔄 手动执行爬虫...
+❌ 执行出错: [Errno 2] No such file or directory: '/AIYXDATA-TRADAR'
+172.20.0.1 - - [19/Apr/2026 10:09:37] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:09:37] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:09:38] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:09:38] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:09:39] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 10:09:39] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 10:09:46] "POST /api/refresh HTTP/1.1" 200 -
+🔄 手动执行爬虫...
+❌ 执行出错: [Errno 2] No such file or directory: '/AIYXDATA-TRADAR'
+172.20.0.1 - - [19/Apr/2026 10:09:47] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:09:47] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:09:47] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:09:47] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:31] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:33] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:34] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:34] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:36] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 10:15:36] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 10:15:37] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:41] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:45] "GET /api/profiles/list HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:15:54] "POST /api/profiles/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:32:57] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:32:58] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:32:59] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:32:59] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:33:01] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 10:33:01] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 10:33:32] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:33:32] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:33:32] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:33:32] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 10:33:32] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 11:31:54] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 11:31:54] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 11:31:54] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 11:31:54] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:01:30] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:01:30] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:01:30] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:01:30] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:02:08] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:02:08] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:02:09] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:02:09] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:02:10] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 12:02:10] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 12:08:31] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:08:32] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:08:33] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:08:33] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:08:33] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 12:08:33] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 12:09:56] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:09:56] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:09:56] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:09:56] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:09:56] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:30:45] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:30:45] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:30:46] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:30:46] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:31:11] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:31:11] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:31:11] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:31:11] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:31:11] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:31:17] "POST /api/check_ai_connection HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:31:18] "POST /api/get_ai_models HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:41:50] "POST /api/check_ai_connection HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:41:51] "POST /api/get_ai_models HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:08] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:08] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:08] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:08] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:08] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:08] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:08] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:09] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:09] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:09] "POST /api/save HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:09] "POST /api/refresh HTTP/1.1" 200 -
+🔄 手动执行爬虫...
+❌ 执行出错: [Errno 2] No such file or directory: '/AIYXDATA-TRADAR'
+172.20.0.1 - - [19/Apr/2026 12:42:17] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:18] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:18] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:18] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:42:19] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 12:42:19] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 12:43:10] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:43:11] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:43:11] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:43:11] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 12:43:12] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 12:43:12] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [19/Apr/2026 17:19:36] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 17:19:36] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 17:19:37] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 17:19:37] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [19/Apr/2026 17:19:38] code 404, message File not found
+172.20.0.1 - - [19/Apr/2026 17:19:38] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 12:08:28] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 12:08:30] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 12:08:31] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 12:08:32] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 12:08:36] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 12:08:36] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 13:02:42] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:02:44] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:02:45] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:02:45] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:02:47] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 13:02:47] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 13:03:29] "GET /api/load?file=analysis_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:03:29] "GET /api/load?file=timeline HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:03:29] "GET /api/load?file=translation_prompt HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:03:29] "GET /api/load?file=frequency HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:03:29] "GET /api/load?file=config HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:09:22] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:09:23] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:09:24] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:09:24] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:09:25] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 13:09:25] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 13:56:21] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:56:23] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:56:24] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 13:56:25] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:28] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:33] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:35] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:36] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:40] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 14:02:40] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 14:02:50] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:54] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:55] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:02:55] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:03:01] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 14:03:01] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 14:03:54] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:04:01] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:04:04] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:04:05] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:04:05] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:04:10] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 14:04:10] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 14:20:01] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:02] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:02] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:02] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:08] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 14:20:08] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 14:20:26] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:28] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:28] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:28] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 14:20:36] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 14:20:36] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 17:03:31] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:54:13] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:54:14] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:54:14] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:54:14] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:54:16] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 18:54:16] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 18:55:30] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:55:31] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:55:31] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:55:31] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 18:55:33] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 18:55:33] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 18:55:38] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:08:56] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:08:56] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:08:56] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:08:56] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:08:58] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 19:08:58] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 19:09:02] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:09:02] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:09:03] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:09:03] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:09:04] code 404, message File not found
+172.20.0.1 - - [20/Apr/2026 19:09:04] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [20/Apr/2026 19:09:20] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:09:21] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:09:21] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 19:09:21] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+[API] 搜索功能出错: cannot import name 'load_config' from 'aiyxdata_tradar.core.config' (/app/aiyxdata_tradar/core/config.py)
+Traceback (most recent call last):
+  File "/app/server.py", line 159, in do_GET
+    from aiyxdata_tradar.core.config import load_config
+ImportError: cannot import name 'load_config' from 'aiyxdata_tradar.core.config' (/app/aiyxdata_tradar/core/config.py)
+172.20.0.1 - - [20/Apr/2026 19:57:13] "GET /api/search?kw=test HTTP/1.1" 500 -
+✅ AIYXDATA-TRADAR 自定义配置服务器已启动 / Custom Config Web Server started
+🌐 端口 / Port: 8080
+📁 根目录 / Root Dir: /app/output
+🔒 支持 API 保存功能 / Contains config save APIs
+--------------------------------------------------
+172.20.0.1 - - [20/Apr/2026 20:02:55] "GET /api/search?kw=test HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 20:04:16] "GET /api/search?kw=AI HTTP/1.1" 200 -
+172.20.0.1 - - [20/Apr/2026 20:05:38] "GET /api/search?kw=AI HTTP/1.1" 200 -
+✅ AIYXDATA-TRADAR 自定义配置服务器已启动 / Custom Config Web Server started
+🌐 端口 / Port: 8080
+📁 根目录 / Root Dir: /app/output
+🔒 支持 API 保存功能 / Contains config save APIs
+--------------------------------------------------
+172.20.0.1 - - [20/Apr/2026 20:10:45] "GET /api/search?kw=AI HTTP/1.1" 200 -
+✅ AIYXDATA-TRADAR 自定义配置服务器已启动 / Custom Config Web Server started
+🌐 端口 / Port: 8080
+📁 根目录 / Root Dir: /app/output
+🔒 支持 API 保存功能 / Contains config save APIs
+--------------------------------------------------
+172.20.0.1 - - [20/Apr/2026 20:11:52] "GET /api/search?kw=AI HTTP/1.1" 200 -
+✅ AIYXDATA-TRADAR 自定义配置服务器已启动 / Custom Config Web Server started
+🌐 端口 / Port: 8080
+📁 根目录 / Root Dir: /app/output
+🔒 支持 API 保存功能 / Contains config save APIs
+--------------------------------------------------
+172.20.0.1 - - [20/Apr/2026 20:12:52] "GET /api/search?kw=AI HTTP/1.1" 200 -
+✅ AIYXDATA-TRADAR 自定义配置服务器已启动 / Custom Config Web Server started
+🌐 端口 / Port: 8080
+📁 根目录 / Root Dir: /app/output
+🔒 支持 API 保存功能 / Contains config save APIs
+--------------------------------------------------
+172.20.0.1 - - [21/Apr/2026 07:28:04] "GET /api/search_history HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 07:28:11] "GET /api/search?keywords=test&days=7 HTTP/1.1" 400 -
+172.20.0.1 - - [21/Apr/2026 07:28:16] "GET /api/search?keywords=test&days=7 HTTP/1.1" 400 -
+172.20.0.1 - - [21/Apr/2026 07:32:43] "GET /api/search?kw=test&days=7 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 07:33:07] code 404, message File not found
+172.20.0.1 - - [21/Apr/2026 07:33:07] "GET /api/generate_report?kw=test&days=7 HTTP/1.1" 404 -
+172.20.0.1 - - [21/Apr/2026 07:33:11] code 404, message File not found
+172.20.0.1 - - [21/Apr/2026 07:33:11] "GET /api/generate_report?kw=test&days=7 HTTP/1.1" 404 -
+[API] 生成报告出错: list indices must be integers or slices, not str
+Traceback (most recent call last):
+  File "/app/server.py", line 640, in do_POST
+    history_data["searches"].insert(0, {
+TypeError: list indices must be integers or slices, not str
+172.20.0.1 - - [21/Apr/2026 07:38:00] "POST /api/generate_report HTTP/1.1" 500 -
+[API] 生成报告出错: list indices must be integers or slices, not str
+Traceback (most recent call last):
+  File "/app/server.py", line 640, in do_POST
+    history_data["searches"].insert(0, {
+TypeError: list indices must be integers or slices, not str
+172.20.0.1 - - [21/Apr/2026 10:45:03] "POST /api/generate_report HTTP/1.1" 500 -
+[API] 生成报告出错: list indices must be integers or slices, not str
+Traceback (most recent call last):
+  File "/app/server.py", line 640, in do_POST
+    history_data["searches"].insert(0, {
+TypeError: list indices must be integers or slices, not str
+172.20.0.1 - - [21/Apr/2026 13:19:15] "POST /api/generate_report HTTP/1.1" 500 -
+✅ AIYXDATA-TRADAR 自定义配置服务器已启动 / Custom Config Web Server started
+🌐 端口 / Port: 8080
+📁 根目录 / Root Dir: /app/output
+🔒 支持 API 保存功能 / Contains config save APIs
+--------------------------------------------------
+172.20.0.1 - - [21/Apr/2026 13:21:08] "POST /api/generate_report HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:21:41] "GET /report.html?id=report_20260421_132108_6241 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:21:47] "GET /report.html?id=report_20260421_132108_6241 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:22:09] "GET /api/report/report_20260421_132108_6241 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:32:04] "GET /api/search_history HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:32:38] "GET /api/search?kw=test%20hacker&days=7 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:32:47] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:36:49] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:37:24] "POST /api/generate_report HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:38:48] "GET /api/report/report_20260421_133724_3939 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:39:45] "GET /api/search_history HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:39:50] "GET /api/search?kw=test%20hacker&days=7 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:49:30] "GET /report.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:52:22] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:52:22] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:52:23] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:52:23] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:52:24] code 404, message File not found
+172.20.0.1 - - [21/Apr/2026 13:52:24] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [21/Apr/2026 13:53:41] "POST /api/refresh HTTP/1.1" 200 -
+🔄 手动执行爬虫...
+❌ 执行出错: [Errno 2] No such file or directory: '/AIYXDATA-TRADAR'
+172.20.0.1 - - [21/Apr/2026 13:53:42] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:53:42] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:53:42] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:53:42] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:57:25] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:57:25] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:57:25] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 13:57:25] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 14:05:15] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 14:10:08] "GET /api/search?kw=test HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 14:10:18] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 14:10:27] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 14:10:39] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 14:10:56] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:21:25] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:21:25] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:21:26] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:21:26] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:21:27] code 404, message File not found
+172.20.0.1 - - [21/Apr/2026 16:21:27] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [21/Apr/2026 16:39:47] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:39:47] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:39:47] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:39:47] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 16:56:17] "GET /index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:38] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:38] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:39] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:39] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:41] "GET / HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:42] "GET /config_editor/index.html HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:42] "GET /config_editor/assets/script.js HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:42] "GET /config_editor/assets/style.css HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:00:43] code 404, message File not found
+172.20.0.1 - - [21/Apr/2026 17:00:43] "GET /favicon.ico HTTP/1.1" 404 -
+172.20.0.1 - - [21/Apr/2026 17:00:46] "GET /api/search?kw=OPC HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:16:10] "GET /api/search?kw=OPC&days=7 HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:17:19] "GET /api/search?kw=test HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:17:59] "GET /api/search?kw=test HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:23:48] "GET /api/search?kw=test HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:25:04] "GET /api/search?kw=ä¸\x8aæµ· HTTP/1.1" 200 -
+172.20.0.1 - - [21/Apr/2026 17:25:47] "GET /api/search?kw=ä¸\x8aæµ· HTTP/1.1" 200 -

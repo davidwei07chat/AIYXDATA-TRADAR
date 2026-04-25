@@ -1222,3 +1222,23 @@ input[type="checkbox"]:disabled {
     transform: rotate(2deg);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+
+/* 模态框可调整大小增强 */
+#modelQueryModal .bg-white {
+    position: relative;
+}
+#modelQueryModal .bg-white::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    height: 40px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 50%, rgba(156, 163, 175, 0.3) 50%);
+    border-bottom-right-radius: 0.5rem;
+}
+#modelQueryModal .bg-white:hover::after {
+    background: linear-gradient(135deg, transparent 50%, rgba(156, 163, 175, 0.5) 50%);
+}
+}

@@ -25,9 +25,15 @@
 - **更新历史 (Update History)**: 
   - 2026-03-13 14:45: 集成 AI 提示词编辑器及全站 7 大配色方案。 (Integrated AI Prompt Editors and 7 Global Color Schemes.)
   - 2026-03-14 12:00: 增强 AI 渲染引擎，支持 Markdown 解析；优化模型选择器，增加阿里云预设及自定义模型输入；记录 Docker 环境热更新排障经验。 (Enhanced AI rendering engine with Markdown support; optimized model picker with Aliyun presets and custom input; documented Docker hot-reload troubleshooting.)
-  - 2026-03-14 19:45: 修复 AI 提示词 [user] 标签缺失问题；新增“SAVE & RUN (立即分析)”功能，打通“保存-触发后验-即时反馈”链路。 (Fixed missing [user] tag in AI prompts; added "SAVE & RUN" feature to bridge the gap between saving and immediate analysis feedback.)
+  - 2026-03-14 19:45: 修复 AI 提示词 [user] 标签缺失问题；新增”SAVE & RUN (立即分析)”功能，打通”保存-触发后验-即时反馈”链路。 (Fixed missing [user] tag in AI prompts; added “SAVE & RUN” feature to bridge the gap between saving and immediate analysis feedback.)
   - 2026-03-14 20:00: 优化编辑器导航栏排版，解决按钮拥挤问题；修复 AI 模型提供商缺失导致的 BadRequestError，增强模型选择引导。 (Optimized editor nav layout; fixed BadRequestError by asserting provider prefixes; enhanced model selection guidance.)
-  - 2026-04-09 09:55: 优化 AI 分析卡片布局，实现 600px 固定高度及内容滚动；修复大模型名称显示为 "Unknown" 的问题，实现模型名称实时同步；改进提示词指令，增强 AI 分析内容的分段逻辑。 (Optimized AI analysis card layout with 600px fixed height and content scrolling; fixed "Unknown" model name display with real-time sync; improved prompt instructions for better content segmentation.)
+  - 2026-04-09 09:55: 优化 AI 分析卡片布局，实现 600px 固定高度及内容滚动；修复大模型名称显示为 “Unknown” 的问题，实现模型名称实时同步；改进提示词指令，增强 AI 分析内容的分段逻辑。 (Optimized AI analysis card layout with 600px fixed height and content scrolling; fixed “Unknown” model name display with real-time sync; improved prompt instructions for better content segmentation.)
+  - 2026-04-19 15:30: 修复可视化配置中心的锁定编辑功能；增强右侧配置面板的禁用状态显示；修复 AI 提示词编辑器的滚动同步问题。 (Fixed lock edit functionality in visual config center; enhanced disabled state display for right panels; fixed scroll sync for AI prompt editors.)
+  - 2026-04-19 16:00: 增强保存方案功能，支持方案列表显示与覆盖确认；更新品牌名称为 AiYX Data Radar；更新主页面标题和版本号。 (Enhanced profile save feature with list display and overwrite confirmation; updated brand name to AiYX Data Radar; updated homepage title and version.)
+  - 2026-04-19 17:15: 实现 AI 模型查询功能，支持多服务商（SiliconFlow/OpenAI/DeepSeek/Zhipu）的连接测试、模型列表获取、自动配置填充；修正 AI 配置格式（deepseek-ai/deepseek-v3）和 temperature 参数（1）；添加详细的功能规范文档。 (Implemented AI model query feature supporting multiple providers with connection testing, model list fetching, and auto-config population; corrected AI config format and temperature parameter; added detailed feature specification documentation.)
+  - 2026-04-23 08:54: 修复 Nginx 反向代理端口配置错误（8084 → 8080），解决 502 Bad Gateway 问题；修复数据库查询字段不匹配（published_at → first_crawl_time），确保所有 API 功能正常工作；更新部署配置文档。 (Fixed Nginx reverse proxy port configuration (8084 → 8080) to resolve 502 Bad Gateway; fixed database query field mismatch (published_at → first_crawl_time) to ensure all APIs work correctly; updated deployment configuration documentation.)
+  - 2026-04-24 15:52: 修复配置文件读取失败问题，调整 CONFIG_DIR 路径检测顺序（/TrendRadar/config 优先于 /app/config），解决配置编辑器无法加载配置文件的问题；验证所有配置文件（config.yaml、frequency_words.txt、timeline.yaml、ai_analysis_prompt.txt、ai_translation_prompt.txt）均可正常读取。 (Fixed configuration file read failure by reordering CONFIG_DIR path detection (/TrendRadar/config prioritized over /app/config); verified all config files load successfully.)
+  - 2026-04-24 16:30: 优化 AI 模型查询弹出框，添加搜索过滤功能和可调整大小功能；增强拖拽区域可视化（40px × 40px 渐变三角形），提升用户体验。 (Optimized AI model query modal with search filtering and resizable functionality; enhanced drag area visualization (40px × 40px gradient triangle) for better UX.)
 
 - **技术栈信息 (Tech Stack)**:
   - **核心框架 (Core Framework)**: Python 3.10+, HTML5, Vanilla CSS, Vanilla JavaScript
@@ -150,9 +156,15 @@ The system calculates news hotness (for sorting) based on the following formula:
   - **APPLY 应用同步**: 实现“前端修改 -> API 推送 -> 文件覆盖 -> 触发后端 Reload”的闭环。 (Implements the closed-loop of "Frontend Edit -> API Push -> File Overwrite -> Trigger backend reload".)
 - **方案管理 (Profile Management)**: 
   - **后端联动**: 方案不再仅存于 LocalStorage，而是通过 `/api/profiles/` 系列接口与服务器同步，实现真正的持久化。
-  - **覆盖保存 (Overwrite)**: 在“保存方案”弹窗中，系统会自动列出服务器上已有的方案。用户可以点击列表中的方案名进行直接覆盖，或者输入新名称创建。
+  - **保存方案增强 (Enhanced Save Profile)**: 
+    - **方案列表显示**: 打开”保存方案”弹窗时，自动加载并显示服务器上已保存的所有方案（最多5个），包括方案名称、修改时间和文件大小。
+    - **选择覆盖 (Select to Overwrite)**: 用户可点击列表中的方案进行选择，选中后显示单选框标记。
+    - **覆盖确认 (Overwrite Confirmation)**: 选择现有方案后点击”确认保存”，会弹出确认对话框询问是否覆盖该方案。
+    - **灵活保存方式 (Flexible Save)**: 支持三种保存方式：(1) 选择列表中的方案覆盖；(2) 在输入框输入新名称保存为新方案；(3) 不选择方案、不输入名称则自动生成时间戳名称。
+    - Enhanced Save Profile: Display existing profiles list with metadata; allow selecting by index to overwrite with confirmation; support custom naming or auto-generate timestamp.
+  - **覆盖保存 (Overwrite)**: 在”保存方案”弹窗中，系统会自动列出服务器上已有的方案。用户可以点击列表中的方案名进行直接覆盖，或者输入新名称创建。
   - **容量控制**: 服务器端自动维持最近 5 个方案，防止磁盘空间溢出。
-  - **一键提取**: 支持从服务器列表中选择序号，一键将历史方案的内容回填至当前编辑器，并通过“APPLY 应用同步”生效。
+  - **一键提取**: 支持从服务器列表中选择序号，一键将历史方案的内容回填至当前编辑器，并通过”APPLY 应用同步”生效。
   - **后端存储**: 方案以 JSON 对象形式打包当前所有配置文件（config, frequency, timeline, ai_analysis_prompt, ai_translation_prompt），通过 `/api/profiles/save` 存储在服务器的 `profiles/` 目录。
   - **加载方案**: 支持从现有方案文件中回填内容到编辑器，实现一键切换爬取策略。 (Supports backfilling content from existing profile files back to the editor for one-click strategy switching.)
 - **AI 提示词编辑 (AI Prompt Editing)**:
@@ -268,6 +280,127 @@ The system pre-sets 7 distinctive themes, ranging from eye-comfort to high-contr
   - **修复 (Fix)**: 在 `analyzer.py` 中为 `AIAnalysisResult` 增加 `metadata` 字段；在 `analyze()` 方法返回前手动填充 `{"model": model}`；修改 `html_v2.py` 的渲染逻辑。
   - **预防 (Prevention)**: 在设计跨模块传递的数据类时，应预留 `metadata` 或 `context` 字典，以备未来扩展运行时元数据。
   - **结果 (Result)**: 成功实现模型名称实时同步，报告顶部可准确显示如 `DeepSeek-V3` 等模型。
+- **可视化配置中心锁定编辑功能异常 (Lock Edit Malfunction)**:
+  - **表现 (Symptoms)**: 
+    1. 锁定编辑状态下，右侧配置面板（config-panel、frequency-panel、timeline-panel）的输入元素未显示为禁用状态（未变灰）。
+    2. 右侧配置面板在锁定状态下无法滚动浏览内容。
+    3. `ai_analysis_prompt.txt` 和 `ai_translation_prompt.txt` 编辑器的左侧显示框无法正常滚动，内容无法跟随滚动条移动。
+  - **原因 (Cause)**:
+    1. **右侧面板禁用状态**: `applyLockState()` 函数在第 5804 行设置了容器级别的 `pointerEvents: 'none'`，导致整个容器被阻断，包括滚动功能。同时，对输入元素的禁用选择器不够全面，某些非表单元素（如 `[role="button"]`、`[onclick]`）未被正确禁用。
+    2. **右侧面板滚动**: 容器级别的 `pointerEvents: 'none'` 阻止了所有指针交互，包括滚动。
+    3. **AI 提示词编辑器滚动**: `analysisPromptEditor` 和 `translationPromptEditor` 缺少 scroll 事件监听器。在 `/TrendRadar/output/config_editor/assets/script.js` 第 194-196 行，只有 yaml、frequency、timeline 三个编辑器绑定了 `scroll` 事件，导致这两个编辑器的 backdrop 层无法同步滚动。
+  - **修复 (Fix)**:
+    1. **增强右侧面板禁用逻辑** (`/TrendRadar/output/config_editor/assets/script.js` 第 5800-5826 行):
+       - 移除容器级别的 `pointerEvents: 'none'`，保留 `overflow: auto` 以支持滚动。
+       - 扩展选择器从 `'input, select, textarea, button'` 改为 `'input, select, textarea, button, [role="button"], [onclick]'`。
+       - 区分表单元素和非表单元素的禁用方式：表单元素使用 `disabled` 属性，非表单元素使用 `pointerEvents: 'none'` 和 `cursor: 'not-allowed'`。
+    2. **添加 AI 提示词编辑器的 scroll 监听** (`/TrendRadar/output/config_editor/assets/script.js` 第 197-198 行):
+       ```javascript
+       analysisPromptEditor.addEventListener('scroll', () => syncScroll('analysis_prompt-editor', 'analysis_prompt-backdrop'));
+       translationPromptEditor.addEventListener('scroll', () => syncScroll('translation_prompt-editor', 'translation_prompt-backdrop'));
+       ```
+  - **预防 (Prevention)**:
+    1. 在设计锁定机制时，应明确区分"禁用交互"和"禁用滚动"两个概念。容器级别的 `pointerEvents: 'none'` 会同时阻止两者，应改为在元素级别进行细粒度控制。
+    2. 对于所有编辑器类组件，应统一添加 scroll 事件监听，确保 backdrop 层与 textarea 层的滚动位置同步。可在编辑器初始化时使用循环或统一函数进行绑定，避免遗漏。
+    3. 在测试锁定功能时，应覆盖所有配置文件标签页（包括 AI 提示词），验证滚动、禁用状态、按钮可用性等多个维度。
+  - **结果 (Result)**:
+    1. 锁定状态下，右侧配置面板的所有输入元素正确显示为禁用状态（opacity 0.6，pointerEvents: 'none'）。
+    2. 右侧配置面板可正常滚动浏览内容，与左侧编辑器保持一致的交互体验。
+    3. `ai_analysis_prompt.txt` 和 `ai_translation_prompt.txt` 编辑器的左侧显示框可正常滚动，内容跟随滚动条移动。
+    4. 锁定状态下，只有 "APPLY 应用同步" 和 "SAVE & RUN 立即分析" 两个修改类按钮被禁用，其他浏览/加载类按钮（读取配置、加载默认、读取方案、保存方案、主题切换等）保持可用。
+- **品牌名称与主页面更新 (Brand Name & Homepage Update)**:
+  - **表现 (Symptoms)**: 系统品牌名称需要从 "TrendRadar" 统一更新为 "AiYX Data Radar"，主页面标题和版本号也需要相应更新。
+  - **原因 (Cause)**: 品牌重塑需求，统一系统标识和用户界面。
+  - **修复 (Fix)**:
+    1. **配置中心** (`/TrendRadar/output/config_editor/index.html`):
+       - 页面标题：`TrendRadar 配置文件编辑器` → `AiYX Data Radar 配置文件编辑器`
+       - 导航栏：移除"可视化配置编辑器"文本，仅显示 "AiYX Data Radar"
+    2. **主页面** (`/TrendRadar/aiyxdata_tradar/report/html_v2.py`):
+       - 顶部标签：`AIYX DATA TECH NEWS POOL` → `AIYX DATA TECH RADAR`
+       - 主标题：`TECH NEWS 热点分析` → `DATA RADAR 热点分析`
+       - 版本号：保持动态格式 `V1.01.{月日}`，自动根据当前日期更新
+  - **预防 (Prevention)**:
+    1. 品牌名称更新时，应建立统一的命名规范文档，确保所有文件中的品牌名称保持一致。
+    2. 使用全局搜索替换时，应谨慎选择替换范围，避免误改代码注释或变量名。
+    3. 更新后应进行全面的 UI 测试，确保所有页面的品牌名称、标题、版本号显示正确。
+  - **结果 (Result)**:
+    1. 配置中心页面标题和导航栏已更新为 "AiYX Data Radar"。
+    2. 主页面顶部标签和主标题已更新为 "AiYX DATA TECH RADAR" 和 "DATA RADAR 热点分析"。
+    3. 版本号保持动态更新，自动反映当前日期。
+
+- **Nginx 反向代理端口配置错误 (Nginx Reverse Proxy Port Mismatch)**:
+  - **表现 (Symptoms)**: 
+    1. 外部访问 `https://trendradar.aiyxtech.us.kg` 返回 502 Bad Gateway 错误。
+    2. 本地直接访问 `http://127.0.0.1:8080/api/search` 正常返回 JSON 数据。
+    3. 同服务器其他网址正常，仅 trendradar 项目出现 502 错误。
+    4. Nginx 错误日志显示 `recv() failed (104: Connection reset by peer) while reading response header from upstream, upstream: "http://127.0.0.1:8084/"`。
+  - **原因 (Cause)**: 
+    1. **配置不匹配**: Flask 服务器运行在端口 8080，但 Nginx 反向代理配置指向端口 8084。
+    2. **根本原因**: 可能是之前修改过 Flask 端口但未同步更新 Nginx 配置，或配置文件在部署时出现版本不一致。
+    3. **发现过程**: 通过 `ss -tlnp` 命令发现 Flask 监听 8080，但 `/etc/nginx/sites-available/trendradar.aiyxtech.us.kg.conf` 中 `proxy_pass` 指向 8084。
+  - **修复 (Fix)**:
+    1. **定位问题** (`/etc/nginx/sites-available/trendradar.aiyxtech.us.kg.conf` 第 16 行):
+       ```nginx
+       # 修改前 (Before)
+       proxy_pass http://127.0.0.1:8084;
+       
+       # 修改后 (After)
+       proxy_pass http://127.0.0.1:8080;
+       ```
+    2. **验证配置**: 执行 `nginx -t` 确保配置语法正确。
+    3. **重新加载**: 执行 `nginx -s reload` 或 `systemctl reload nginx` 使配置生效。
+    4. **验证修复**: 
+       - 本地测试: `curl http://127.0.0.1/api/search?kw=AI` → 返回 JSON 数据
+       - 远程测试: `curl -k https://trendradar.aiyxtech.us.kg/api/search?kw=AI` → 返回 JSON 数据
+  - **预防 (Prevention)**:
+    1. **配置管理**: 使用环境变量或配置管理工具（Ansible、Terraform）维护 Nginx 配置，避免硬编码端口号。
+    2. **文档同步**: 在修改应用端口时，同时更新 Nginx 配置文档和部署清单。
+    3. **健康检查**: 在 Nginx 配置中添加 `upstream` 健康检查，及时发现连接问题。
+    4. **日志监控**: 定期检查 Nginx 错误日志（`/var/log/nginx/error.log`），及时发现 "upstream timed out" 或 "connection refused" 错误。
+    5. **自动化测试**: 在 CI/CD 流程中添加反向代理连通性测试，确保部署前配置正确。
+  - **结果 (Result)**:
+    1. ✅ 英文搜索 API (`/api/search?kw=AI`) 正常工作，返回多条结果。
+    2. ✅ 中文搜索 API (`/api/search?kw=上海`) 正常工作。
+    3. ✅ 报告生成 API (`POST /api/generate_report`) 正常工作，返回 report_id。
+    4. ✅ 搜索历史 API (`/api/search_history`) 正常工作，返回历史记录列表。
+    5. ✅ 报告页面 (`/report.html?id=...`) 可正常访问。
+    6. ✅ 外部访问 HTTPS 不再返回 502 错误，所有功能正常。
+
+- **数据库查询字段不匹配 (Database Query Field Mismatch)**:
+  - **表现 (Symptoms)**: 
+    1. 搜索 API 返回错误日志 `no such column: i.published_at`。
+    2. `news_items` 表查询失败，但 `rss_items` 表查询正常。
+  - **原因 (Cause)**: 
+    1. **字段差异**: `rss_items` 表有 `published_at` 列，但 `news_items` 表没有此列，使用 `first_crawl_time` 代替。
+    2. **查询不一致**: `/TrendRadar/docker/server.py` 中的 SQL 查询对两个表使用了相同的字段名，导致 `news_items` 查询失败。
+  - **修复 (Fix)**:
+    1. **修改 news_items 查询** (`/TrendRadar/docker/server.py` 第 247-254 行):
+       ```python
+       # 修改前 (Before)
+       query = """
+       SELECT i.title, i.url, i.platform_id, p.name as source, i.published_at
+       FROM news_items i
+       ...
+       """
+       
+       # 修改后 (After)
+       query = """
+       SELECT i.title, i.url, i.platform_id, p.name as source, i.first_crawl_time as published_at
+       FROM news_items i
+       ...
+       """
+       ```
+    2. **统一结果格式** (第 261-266 行): 使用 `published_at` 别名确保两个表的结果格式一致。
+    3. **排序逻辑** (第 282 行): 使用统一的 `published_at` 字段进行排序。
+  - **预防 (Prevention)**:
+    1. **数据库文档**: 维护详细的数据库 Schema 文档，记录每个表的所有列及其含义。
+    2. **查询模板**: 为常见查询创建可复用的模板，避免重复编写相似的 SQL。
+    3. **单元测试**: 为每个数据库查询编写单元测试，验证字段名和返回结果的正确性。
+    4. **代码审查**: 在修改数据库查询时，进行严格的代码审查，确保字段名与实际表结构一致。
+  - **结果 (Result)**:
+    1. ✅ `news_items` 表查询不再报错。
+    2. ✅ 搜索 API 返回完整的新闻数据，包括澎湃新闻、bilibili 热搜、百度热搜等多个来源。
+    3. ✅ 所有搜索结果使用统一的 `published_at` 字段，格式一致。
 
 ---
 
