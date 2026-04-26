@@ -147,12 +147,6 @@ def count_word_frequency(
     if is_first_crawl_func is None:
         is_first_crawl_func = lambda: True
 
-    # 如果没有配置词组，创建一个包含所有新闻的虚拟词组
-    if not word_groups:
-        print("频率词配置为空，将显示所有新闻")
-        word_groups = [{"required": [], "normal": [], "group_key": "全部新闻"}]
-        filter_words = []  # 清空过滤词，显示所有新闻
-
     is_first_today = is_first_crawl_func()
 
     # 确定处理的数据源和新增标记逻辑
@@ -204,11 +198,7 @@ def count_word_frequency(
         results_to_process = results
         all_news_are_new = False
         total_input_news = sum(len(titles) for titles in results.values())
-        filter_status = (
-            "全部显示"
-            if len(word_groups) == 1 and word_groups[0]["group_key"] == "全部新闻"
-            else "频率词过滤"
-        )
+        filter_status = "频率词过滤"
         print(f"当日汇总模式：处理 {total_input_news} 条新闻，模式：{filter_status}")
 
     word_stats = {}
@@ -259,34 +249,27 @@ def count_word_frequency(
                 required_words = group["required"]
                 normal_words = group["normal"]
 
-                # 如果是"全部新闻"模式，所有标题都匹配第一个（唯一的）词组
-                if len(word_groups) == 1 and word_groups[0]["group_key"] == "全部新闻":
-                    group_key = group["group_key"]
-                    word_stats[group_key]["count"] += 1
-                    if source_id not in word_stats[group_key]["titles"]:
-                        word_stats[group_key]["titles"][source_id] = []
-                else:
-                    # 原有的匹配逻辑（支持正则语法）
-                    if required_words:
-                        all_required_present = all(
-                            _word_matches(req_item, title_lower)
-                            for req_item in required_words
-                        )
-                        if not all_required_present:
-                            continue
+                # 原有的匹配逻辑（支持正则语法）
+                if required_words:
+                    all_required_present = all(
+                        _word_matches(req_item, title_lower)
+                        for req_item in required_words
+                    )
+                    if not all_required_present:
+                        continue
 
-                    if normal_words:
-                        any_normal_present = any(
-                            _word_matches(normal_item, title_lower)
-                            for normal_item in normal_words
-                        )
-                        if not any_normal_present:
-                            continue
+                if normal_words:
+                    any_normal_present = any(
+                        _word_matches(normal_item, title_lower)
+                        for normal_item in normal_words
+                    )
+                    if not any_normal_present:
+                        continue
 
-                    group_key = group["group_key"]
-                    word_stats[group_key]["count"] += 1
-                    if source_id not in word_stats[group_key]["titles"]:
-                        word_stats[group_key]["titles"][source_id] = []
+                group_key = group["group_key"]
+                word_stats[group_key]["count"] += 1
+                if source_id not in word_stats[group_key]["titles"]:
+                    word_stats[group_key]["titles"][source_id] = []
 
                 first_time = ""
                 last_time = ""
@@ -371,11 +354,7 @@ def count_word_frequency(
     if mode == "incremental":
         if is_first_today:
             total_input_news = sum(len(titles) for titles in results.values())
-            filter_status = (
-                "全部显示"
-                if len(word_groups) == 1 and word_groups[0]["group_key"] == "全部新闻"
-                else "频率词匹配"
-            )
+            filter_status = "频率词匹配"
             if not quiet:
                 print(
                     f"增量模式：当天第一次爬取，{total_input_news} 条新闻中有 {matched_new_count} 条{filter_status}"
@@ -383,12 +362,7 @@ def count_word_frequency(
         else:
             if new_titles:
                 total_new_count = sum(len(titles) for titles in new_titles.values())
-                filter_status = (
-                    "全部显示"
-                    if len(word_groups) == 1
-                    and word_groups[0]["group_key"] == "全部新闻"
-                    else "匹配频率词"
-                )
+                filter_status = "匹配频率词"
                 if not quiet:
                     print(
                         f"增量模式：{total_new_count} 条新增新闻中，有 {matched_new_count} 条{filter_status}"
@@ -401,22 +375,14 @@ def count_word_frequency(
     elif mode == "current":
         total_input_news = sum(len(titles) for titles in results_to_process.values())
         if is_first_today:
-            filter_status = (
-                "全部显示"
-                if len(word_groups) == 1 and word_groups[0]["group_key"] == "全部新闻"
-                else "频率词匹配"
-            )
+            filter_status = "频率词匹配"
             if not quiet:
                 print(
                     f"当前榜单模式：当天第一次爬取，{total_input_news} 条当前榜单新闻中有 {matched_new_count} 条{filter_status}"
                 )
         else:
             matched_count = sum(stat["count"] for stat in word_stats.values())
-            filter_status = (
-                "全部显示"
-                if len(word_groups) == 1 and word_groups[0]["group_key"] == "全部新闻"
-                else "频率词匹配"
-            )
+            filter_status = "频率词匹配"
             if not quiet:
                 print(
                     f"当前榜单模式：{total_input_news} 条当前榜单新闻中有 {matched_count} 条{filter_status}"

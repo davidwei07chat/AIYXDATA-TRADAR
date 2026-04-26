@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  trendradar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trendradar
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

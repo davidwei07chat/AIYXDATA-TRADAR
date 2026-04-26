@@ -57,9 +57,52 @@ python -m aiyxdata_tradar
 
 ## 🐳 Docker 部署
 
+### 使用 Docker Compose（推荐）
+
 ```bash
+# 克隆项目
+git clone https://github.com/davidwei07chat/AIYXDATA-TRADAR.git
+cd AIYXDATA-TRADAR
+
+# 启动服务
 docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
 ```
+
+### 使用 Docker 单容器
+
+```bash
+# 构建镜像
+docker build -t aiyxdata-tradar .
+
+# 运行容器
+docker run -d \
+  -p 8080:8080 \
+  -v $(pwd)/config:/app/config \
+  -v $(pwd)/aiyxdata_tradar:/app/aiyxdata_tradar \
+  --name tradar \
+  aiyxdata-tradar
+
+# 查看日志
+docker logs -f tradar
+
+# 停止容器
+docker stop tradar
+```
+
+### 配置说明
+
+启动前，请确保配置文件已准备好：
+- `config/config.yaml` - 核心配置（API Key、通知渠道等）
+- `config/timeline.yaml` - 时间调度配置
+- `config/frequency_words.txt` - 关键词配置
+
+Docker Compose 会自动挂载这些配置文件到容器内。
 
 ---
 
