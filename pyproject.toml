@@ -1,6 +1,6 @@
 [project]
 name = "aiyxdata_tradar"
-version = "6.0.0"
+version = "6.1.0"
 description = "AIYXDATA-TRADAR - 热点新闻聚合与分析工具"
 requires-python = ">=3.10"
 dependencies = [
