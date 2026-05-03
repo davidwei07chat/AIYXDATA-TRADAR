@@ -69,10 +69,6 @@ rss:
       name: "Hacker News"
       url: "https://hnrss.org/frontpage"
 
-    - id: "ruanyifeng"
-      name: "阮一峰的网络日志"
-      url: "http://www.ruanyifeng.com/blog/atom.xml"
-
     - id: "36KR"
       name: "36KR"
       url: "https://www.bing.com/news/search?q=人工智能&format=RSS"
@@ -93,6 +89,19 @@ rss:
       name: "36氪"
       url: "https://36kr.com/feed-newsflash"
       max_age_days: 3
+
+    - id: "huxiu"
+      name: "虎嗅"
+      url: "https://rss.huxiu.com/"
+      max_age_days: 5
+
+    - id: "timednews"
+      name: "时刻新闻"
+      url: "https://rsshub.app/timednews/news"
+      max_age_days: 7
+
+
+
 
 
 
@@ -125,7 +134,7 @@ display:
     ai_analysis: true
   standalone:
     platforms: ["zhihu","wallstreetcn-hot","toutiao","baidu","thepaper","cls-hot"]
-    rss_feeds: ["ruanyifeng","36KR","Hacker News Launches","baiduhot","ftchinese","hacker-news","36kr"]
+    rss_feeds: ["ruanyifeng","36KR","Hacker News Launches","baiduhot","ftchinese","hacker-news","36kr","huxiu","timednews"]
     max_items: 20
 
 

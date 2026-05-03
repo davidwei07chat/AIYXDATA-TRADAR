@@ -43,8 +43,13 @@ def manual_run():
     """手动执行一次爬虫"""
     print("🔄 手动执行爬虫...")
     try:
+        # 探测工作目录 (Detect working directory)
+        cwd = "/app" if os.path.exists("/app/aiyxdata_tradar") else "."
+        if not os.path.exists(cwd):
+            cwd = os.getcwd()
+            
         result = subprocess.run(
-            ["python3", "-m", "aiyxdata_tradar"], cwd="/AIYXDATA-TRADAR", capture_output=False, text=True
+            ["python3", "-m", "aiyxdata_tradar"], cwd=cwd, capture_output=False, text=True
         )
         if result.returncode == 0:
             print("✅ 执行完成")

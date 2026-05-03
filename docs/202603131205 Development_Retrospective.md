@@ -34,6 +34,7 @@
   - 2026-04-23 08:54: 修复 Nginx 反向代理端口配置错误（8084 → 8080），解决 502 Bad Gateway 问题；修复数据库查询字段不匹配（published_at → first_crawl_time），确保所有 API 功能正常工作；更新部署配置文档。 (Fixed Nginx reverse proxy port configuration (8084 → 8080) to resolve 502 Bad Gateway; fixed database query field mismatch (published_at → first_crawl_time) to ensure all APIs work correctly; updated deployment configuration documentation.)
   - 2026-04-24 15:52: 修复配置文件读取失败问题，调整 CONFIG_DIR 路径检测顺序（/TrendRadar/config 优先于 /app/config），解决配置编辑器无法加载配置文件的问题；验证所有配置文件（config.yaml、frequency_words.txt、timeline.yaml、ai_analysis_prompt.txt、ai_translation_prompt.txt）均可正常读取。 (Fixed configuration file read failure by reordering CONFIG_DIR path detection (/TrendRadar/config prioritized over /app/config); verified all config files load successfully.)
   - 2026-04-24 16:30: 优化 AI 模型查询弹出框，添加搜索过滤功能和可调整大小功能；增强拖拽区域可视化（40px × 40px 渐变三角形），提升用户体验。 (Optimized AI model query modal with search filtering and resizable functionality; enhanced drag area visualization (40px × 40px gradient triangle) for better UX.)
+  - 2026-04-26 21:40: 修复手动刷新按钮失效问题，将 `manage.py` 中的硬编码路径从 `/AIYXDATA-TRADAR` 修正为动态探测的 `/app`；修复新增 RSS 源不显示问题，将 `huxiu` 和 `timednews` 同步至 `standalone` 显示白名单。 (Fixed manual refresh button failure by correcting hardcoded path in `manage.py` to dynamic `/app`; fixed missing RSS source display by syncing `huxiu` and `timednews` to the `standalone` display whitelist.)
 
 - **技术栈信息 (Tech Stack)**:
   - **核心框架 (Core Framework)**: Python 3.10+, HTML5, Vanilla CSS, Vanilla JavaScript
@@ -327,6 +328,26 @@ The system pre-sets 7 distinctive themes, ranging from eye-comfort to high-contr
     1. 配置中心页面标题和导航栏已更新为 "AiYX Data Radar"。
     2. 主页面顶部标签和主标题已更新为 "AiYX DATA TECH RADAR" 和 "DATA RADAR 热点分析"。
     3. 版本号保持动态更新，自动反映当前日期。
+- **手动刷新失效与 RSS 源不显示复盘 (Manual Refresh Failure & RSS Source Missing Retro)**:
+  - **表现 (Symptoms)**:
+    1. 点击前端 "SAVE & RUN" 或 "Refresh" 按钮后，后台无新数据产生，`webserver.log` 报错 `No such file or directory: '/AIYXDATA-TRADAR'`。
+    2. 用户在 `config.yaml` 中新增了 RSS 源（如虎嗅、时刻新闻），但刷新后报告中完全没有这两个源的内容。
+  - **原因 (Cause)**:
+    1. **路径 Bug**: `docker/manage.py` 的 `manual_run` 函数硬编码了开发环境路径 `/AIYXDATA-TRADAR`，而生产环境/容器内路径为 `/app`。
+    2. **配置逻辑**: 新增 RSS 源仅在采集端定义，未在 `display.standalone.rss_feeds` 显示白名单中注册。根据系统设计，未注册的源不会渲染独立卡片。
+    3. **外部因素**: `timednews` (时刻新闻) 使用的 `rsshub.app` 官方实例返回了 403 错误，导致该源抓取失败。
+  - **修复 (Fix)**:
+    1. **动态路径探测**: 修改 `manage.py`，增加 `cwd = "/app" if os.path.exists("/app/aiyxdata_tradar") else "."` 逻辑。
+    2. **同步显示配置**: 手动将 `huxiu` 和 `timednews` 加入 `display.standalone.rss_feeds`。
+    3. **手动补录**: 手动执行爬虫任务，确保 `huxiu` 数据成功入库。
+  - **预防 (Prevention)**:
+    1. **环境无关化**: 严禁在生产代码中硬编码宿主机特定路径，应优先使用相对路径或环境变量。
+    2. **配置联动提醒**: 在配置编辑器的 RSS 添加弹窗中增加提示，告知用户添加后需前往“推送内容控制”模块勾选显示。
+    3. **错误日志透明化**: 在前端弹窗中回显更具体的后端错误信息，避免“静默失败”。
+  - **结果 (Result)**:
+    1. ✅ “立即分析”按钮恢复正常，可成功触发后台任务。
+    2. ✅ 虎嗅 (huxiu) 已成功抓取并在独立卡片中显示。
+    3. ✅ 明确了时刻新闻抓取失败的外部原因为 403 拦截。
 
 - **Nginx 反向代理端口配置错误 (Nginx Reverse Proxy Port Mismatch)**:
   - **表现 (Symptoms)**: 
