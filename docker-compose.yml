@@ -1,13 +1,13 @@
 version: '3.8'
 
 services:
-  trendradar:
+  aiyxdata_tradar:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: trendradar
+    container_name: aiyxdata_tradar
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8084:8080"
     volumes:
       - ./data:/app/data
       - ./config:/app/config

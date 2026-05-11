@@ -988,7 +988,7 @@ function renderControls(mod) {
                     <button type="button" class="px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors ai-preset-btn" data-model="minimax/abab6.5s-chat" data-base="">MiniMax</button>
                     <button type="button" class="px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors ai-preset-btn" data-model="openai/gpt-4o-mini" data-base="">OpenAI</button>
                     <button type="button" class="px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors ai-preset-btn" data-model="dashscope/qwen-turbo" data-base="">阿里云 (DashScope)</button>
-                    <button type="button" class="px-3 py-1.5 text-xs border border-blue-200 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors ai-preset-btn" data-model="openai/Pro/deepseek-ai/DeepSeek-V3.2" data-base="https://api.siliconflow.cn/v1">硅基流动 (SiliconFlow)</button>
+                    <button type="button" class="px-3 py-1.5 text-xs border border-gray-300 text-gray-700 rounded hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors ai-preset-btn" data-model="openai/Pro/deepseek-ai/DeepSeek-V3.2" data-base="https://api.siliconflow.cn/v1">硅基流动 (SiliconFlow)</button>
                     <button type="button" class="px-3 py-1.5 text-xs border border-dashed border-gray-400 text-gray-500 rounded hover:bg-gray-50 transition-colors" onclick="addCustomPreset()">+ 自定义 / Custom</button>
                 </div>
             </div>`;
@@ -1011,6 +1011,12 @@ function renderControls(mod) {
             setTimeout(() => {
                 if (typeof renderCustomPresets === 'function') renderCustomPresets();
                 
+                // Initialize highlights
+                const modelInput = document.querySelector('input[data-path="model"]');
+                if (modelInput && typeof updatePresetHighlight === 'function') {
+                    updatePresetHighlight(modelInput.value);
+                }
+
                 document.querySelectorAll('.ai-preset-btn').forEach(btn => {
                     btn.addEventListener('click', function(e) {
                         if (typeof applyPreset === 'function') applyPreset(this.dataset.model, this.dataset.base);
@@ -1088,6 +1094,12 @@ function syncYamlToUI() {
     
     // 渲染完毕，应用锁定状态
     applyLockState();
+
+    // 更新 AI 预设高亮
+    const modelInput = document.querySelector('#controls-ai [data-path="model"]');
+    if (modelInput && typeof updatePresetHighlight === 'function') {
+        updatePresetHighlight(modelInput.value);
+    }
 } catch (e) {
     // 解析失败
 }
@@ -1505,6 +1517,7 @@ function parseFrequencyText(text) {
                     type: 'group-name',
                     name: groupNameMatch[1],
                     keywords: [],
+                    tags: [],
                     startLine: i,
                     precedingComments: pendingComments.length > 0 ? [...pendingComments] : []
                 };
@@ -1534,6 +1547,7 @@ function parseFrequencyText(text) {
                         currentGroup = {
                             type: 'alias',
                             items: [{ keyword, alias }],
+                            tags: [],
                             startLine: i,
                             precedingComments: pendingComments.length > 0 ? [...pendingComments] : []
                         };
@@ -1541,23 +1555,35 @@ function parseFrequencyText(text) {
                     }
                     lastLineWasAlias = true;
                 } else {
-                    // 普通关键词
-                    if (!currentGroup || currentGroup.type === 'alias' || currentGroup.type === 'alias-group') {
-                        // 如果当前是别名类型，需要先保存到缓存
-                        if (currentGroup) {
-                            relatedGroupsBuffer.push(currentGroup);
+                    // 普通关键词或标签指令
+                    // 检测 @tags: 指令
+                    const tagsMatch = trimmed.match(/^@tags:(.+)$/);
+                    if (tagsMatch && currentGroup) {
+                        // 解析标签
+                        const tagsStr = tagsMatch[1];
+                        const tags = tagsStr.split(',').map(t => t.trim()).filter(t => t);
+                        currentGroup.tags = tags;
+                        lastLineWasAlias = false;
+                    } else {
+                        // 普通关键词
+                        if (!currentGroup || currentGroup.type === 'alias' || currentGroup.type === 'alias-group') {
+                            // 如果当前是别名类型，需要先保存到缓存
+                            if (currentGroup) {
+                                relatedGroupsBuffer.push(currentGroup);
+                            }
+                            // 创建新的普通词组
+                            currentGroup = {
+                                type: 'plain',
+                                keywords: [],
+                                tags: [],
+                                startLine: i,
+                                precedingComments: pendingComments.length > 0 ? [...pendingComments] : []
+                            };
+                            pendingComments = [];
                         }
-                        // 创建新的普通词组
-                        currentGroup = {
-                            type: 'plain',
-                            keywords: [],
-                            startLine: i,
-                            precedingComments: pendingComments.length > 0 ? [...pendingComments] : []
-                        };
-                        pendingComments = [];
+                        currentGroup.keywords.push(trimmed);
+                        lastLineWasAlias = false;
                     }
-                    currentGroup.keywords.push(trimmed);
-                    lastLineWasAlias = false;
                 }
             }
         }
@@ -1646,16 +1672,28 @@ function buildFrequencyText(data) {
                 group.keywords.forEach(kw => {
                     result.push(kw);
                 });
+                // 添加标签指令
+                if (group.tags && group.tags.length > 0) {
+                    result.push(`@tags:${group.tags.join(',')}`);
+                }
             } else if (group.type === 'alias' || group.type === 'alias-group') {
                 // 别名类型：keyword => alias
                 group.items.forEach(item => {
                     result.push(`${item.keyword} => ${item.alias}`);
                 });
+                // 添加标签指令
+                if (group.tags && group.tags.length > 0) {
+                    result.push(`@tags:${group.tags.join(',')}`);
+                }
             } else if (group.type === 'plain') {
                 // 普通词组
                 group.keywords.forEach(kw => {
                     result.push(kw);
                 });
+                // 添加标签指令
+                if (group.tags && group.tags.length > 0) {
+                    result.push(`@tags:${group.tags.join(',')}`);
+                }
             }
 
             // 空行处理逻辑：
@@ -1712,14 +1750,26 @@ function buildFrequencyText(data) {
             group.keywords.forEach(kw => {
                 text += kw + '\n';
             });
+            // 添加标签指令
+            if (group.tags && group.tags.length > 0) {
+                text += `@tags:${group.tags.join(',')}\n`;
+            }
         } else if (group.type === 'alias' || group.type === 'alias-group') {
             group.items.forEach(item => {
                 text += `${item.keyword} => ${item.alias}\n`;
             });
+            // 添加标签指令
+            if (group.tags && group.tags.length > 0) {
+                text += `@tags:${group.tags.join(',')}\n`;
+            }
         } else if (group.type === 'plain') {
             group.keywords.forEach(kw => {
                 text += kw + '\n';
             });
+            // 添加标签指令
+            if (group.tags && group.tags.length > 0) {
+                text += `@tags:${group.tags.join(',')}\n`;
+            }
         }
 
         // 空行处理逻辑：与上面保持一致
@@ -1765,6 +1815,17 @@ function renderFrequencyPanel(data) {
         return 'bg-blue-500';
     }
 
+    // 辅助函数：转义 onclick 参数中的字符串，防止 \b 等被求值，同时防单双引号冲突
+    function escAttr(str) {
+        if (!str) return '';
+        return str.toString()
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/"/g, '&quot;')
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, '');
+    }
+
     // 辅助函数：为关键词添加标签
     function getKeywordLabel(keyword) {
         if (keyword.startsWith('+')) return '必须';
@@ -1804,10 +1865,10 @@ function renderFrequencyPanel(data) {
                             ${indexBadge}
                             <span class="text-[10px] bg-orange-500 text-white px-2 py-0.5 rounded font-bold">组别名</span>
                             ${relatedGroupBadge}
-                            <input type="text" value="${group.name || ''}" placeholder="组别名（如：东亚）"
-                                   class="text-sm font-bold border-0 border-b-2 border-orange-300 focus:border-orange-500 outline-none px-2 py-1 flex-1 bg-transparent"
-                                   onclick="event.stopPropagation()"
-                                   onchange="updateGroupName(${idx}, this.value)">
+                             <div class="flex-1 bg-transparent border-b-2 border-orange-300 hover:border-orange-500 transition-colors px-2 py-1 cursor-pointer text-sm font-bold overflow-hidden whitespace-nowrap text-ellipsis"
+                                  onclick="event.stopPropagation(); openExpandableEditModal('编辑组别名', '${escAttr(group.name)}', (val) => updateGroupName(${idx}, val))">
+                                 ${group.name || '<span class="text-gray-400 font-normal italic">点击编辑组别名...</span>'}
+                             </div>
                         </div>
                         <button onclick="event.stopPropagation(); removeWordGroup(${idx})" class="text-red-500 hover:text-red-700 text-xs ml-2">
                             <i class="fa-solid fa-trash"></i>
@@ -1836,6 +1897,22 @@ function renderFrequencyPanel(data) {
                             </button>
                             <div class="text-[10px] text-gray-400">${group.keywords.length} 个关键词</div>
                         </div>
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <div class="text-xs text-gray-600 mb-2 font-bold">分类标签：</div>
+                            <div class="flex flex-wrap gap-2">
+                                ${['热榜', '地区', '财经', '科技', '文旅', '教育', '军事', '国际', '其他'].map(tag => {
+                                    const isSelected = (group.tags || []).includes(tag);
+                                    return `
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" ${isSelected ? 'checked' : ''}
+                                                   onchange="updateGroupTags(${idx}, '${tag}', this.checked)"
+                                                   class="w-3 h-3 rounded">
+                                            <span>${tag}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1857,13 +1934,15 @@ function renderFrequencyPanel(data) {
                     </div>
                     <div class="bg-white rounded p-3 border border-teal-200 editable-area" onclick="event.stopPropagation()">
                         <div class="flex items-center gap-2">
-                            <input type="text" value="${item.keyword || ''}" placeholder="/正则/ 或 关键词"
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded focus:border-teal-500 outline-none text-sm font-mono"
-                                   onblur="updateAliasItem(${idx}, 0, 'keyword', this.value)">
+                            <div class="flex-1 px-3 py-2 border border-gray-300 rounded hover:border-teal-500 cursor-pointer text-sm font-mono overflow-hidden whitespace-nowrap text-ellipsis"
+                                 onclick="openExpandableEditModal('编辑别名关键词', '${escAttr(item.keyword)}', (val) => updateAliasItem(${idx}, 0, 'keyword', val))">
+                                ${item.keyword || '<span class="text-gray-400 italic">正则或关键词</span>'}
+                            </div>
                             <span class="text-teal-600 font-bold">=></span>
-                            <input type="text" value="${item.alias || ''}" placeholder="别名"
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded focus:border-teal-500 outline-none text-sm"
-                                   onblur="updateAliasItem(${idx}, 0, 'alias', this.value)">
+                            <div class="flex-1 px-3 py-2 border border-gray-300 rounded hover:border-teal-500 cursor-pointer text-sm overflow-hidden whitespace-nowrap text-ellipsis"
+                                 onclick="openExpandableEditModal('编辑别名显示值', '${escAttr(item.alias)}', (val) => updateAliasItem(${idx}, 0, 'alias', val))">
+                                ${item.alias || '<span class="text-gray-400 italic">别名</span>'}
+                            </div>
                         </div>
                         <div class="flex items-center justify-between mt-2">
                             <button onclick="openDeepSeekAI('group', ${idx})" class="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1">
@@ -1871,6 +1950,22 @@ function renderFrequencyPanel(data) {
                             </button>
                             <div class="text-[10px] text-gray-500">
                                 <i class="fa-solid fa-lightbulb mr-1"></i>示例：/胖东来|于东来/ => 胖东来
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <div class="text-xs text-gray-600 mb-2 font-bold">分类标签：</div>
+                            <div class="flex flex-wrap gap-2">
+                                ${['热榜', '地区', '财经', '科技', '文旅', '教育', '军事', '国际', '其他'].map(tag => {
+                                    const isSelected = (group.tags || []).includes(tag);
+                                    return `
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" ${isSelected ? 'checked' : ''}
+                                                   onchange="updateGroupTags(${idx}, '${tag}', this.checked)"
+                                                   class="w-3 h-3 rounded">
+                                            <span>${tag}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
@@ -1897,13 +1992,15 @@ function renderFrequencyPanel(data) {
                         </div>
                         ${group.items.map((item, itemIdx) => `
                             <div class="flex items-center gap-2">
-                                <input type="text" value="${item.keyword || ''}" placeholder="/正则/ 或 关键词"
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded focus:border-purple-500 outline-none text-sm font-mono"
-                                       onblur="updateAliasItem(${idx}, ${itemIdx}, 'keyword', this.value)">
+                                <div class="flex-1 px-3 py-2 border border-gray-300 rounded hover:border-purple-500 cursor-pointer text-sm font-mono overflow-hidden whitespace-nowrap text-ellipsis"
+                                     onclick="openExpandableEditModal('编辑别名关键词', '${escAttr(item.keyword)}', (val) => updateAliasItem(${idx}, ${itemIdx}, 'keyword', val))">
+                                    ${item.keyword || '<span class="text-gray-400 italic">正则或关键词</span>'}
+                                </div>
                                 <span class="text-purple-600 font-bold">=></span>
-                                <input type="text" value="${item.alias || ''}" placeholder="别名"
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded focus:border-purple-500 outline-none text-sm"
-                                       onblur="updateAliasItem(${idx}, ${itemIdx}, 'alias', this.value)">
+                                <div class="flex-1 px-3 py-2 border border-gray-300 rounded hover:border-purple-500 cursor-pointer text-sm overflow-hidden whitespace-nowrap text-ellipsis"
+                                     onclick="openExpandableEditModal('编辑别名显示值', '${escAttr(item.alias)}', (val) => updateAliasItem(${idx}, ${itemIdx}, 'alias', val))">
+                                    ${item.alias || '<span class="text-gray-400 italic">别名</span>'}
+                                </div>
                                 <button onclick="removeAliasItem(${idx}, ${itemIdx})" class="text-red-500 hover:text-red-700 text-xs">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
@@ -1915,6 +2012,22 @@ function renderFrequencyPanel(data) {
                             </button>
                             <div class="text-[10px] text-gray-500">
                                 <i class="fa-solid fa-info-circle mr-1"></i>这些别名行在配置文件中无空行分隔，属于同一组
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <div class="text-xs text-gray-600 mb-2 font-bold">分类标签：</div>
+                            <div class="flex flex-wrap gap-2">
+                                ${['热榜', '地区', '财经', '科技', '文旅', '教育', '军事', '国际', '其他'].map(tag => {
+                                    const isSelected = (group.tags || []).includes(tag);
+                                    return `
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" ${isSelected ? 'checked' : ''}
+                                                   onchange="updateGroupTags(${idx}, '${tag}', this.checked)"
+                                                   class="w-3 h-3 rounded">
+                                            <span>${tag}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     </div>
@@ -1956,6 +2069,22 @@ function renderFrequencyPanel(data) {
                                 <i class="fa-solid fa-wand-magic-sparkles"></i>AI 写正则
                             </button>
                             <div class="text-[10px] text-gray-400">${group.keywords.length} 个关键词</div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <div class="text-xs text-gray-600 mb-2 font-bold">分类标签：</div>
+                            <div class="flex flex-wrap gap-2">
+                                ${['热榜', '地区', '财经', '科技', '文旅', '教育', '军事', '国际', '其他'].map(tag => {
+                                    const isSelected = (group.tags || []).includes(tag);
+                                    return `
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" ${isSelected ? 'checked' : ''}
+                                                   onchange="updateGroupTags(${idx}, '${tag}', this.checked)"
+                                                   class="w-3 h-3 rounded">
+                                            <span>${tag}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2009,9 +2138,9 @@ function renderFrequencyPanel(data) {
             </div>
             <div id="global-filter-tags" class="tag-input-container">
                 ${data.globalFilter.map(f => `
-                    <span class="tag-item ${getKeywordClass(f)}">
+                    <span class="tag-item ${getKeywordClass(f)} cursor-pointer" onclick="editGlobalFilter('${escAttr(f)}', this)">
                         ${f}
-                        <button onclick="removeGlobalFilter('${f.replace(/'/g, "\\'")}')">×</button>
+                        <button onclick="event.stopPropagation(); removeGlobalFilter('${escAttr(f)}')">×</button>
                     </span>
                 `).join('')}
                 <input type="text" class="tag-input" placeholder="输入过滤词后按回车..." onkeydown="handleGlobalFilterInput(event)">
@@ -2154,16 +2283,16 @@ window.confirmAddWordGroup = function(type) {
 
     if (type === 'group') {
         // 组别名类型
-        newGroup = { type: 'group-name', name: '', keywords: [] };
+        newGroup = { type: 'group-name', name: '', keywords: [], tags: [] };
     } else if (type === 'alias') {
         // 单个别名类型
-        newGroup = { type: 'alias', items: [{ keyword: '', alias: '' }] };
+        newGroup = { type: 'alias', items: [{ keyword: '', alias: '' }], tags: [] };
     } else if (type === 'multi-alias') {
         // 连续别名类型（多个别名行）
-        newGroup = { type: 'alias-group', items: [{ keyword: '', alias: '' }, { keyword: '', alias: '' }] };
+        newGroup = { type: 'alias-group', items: [{ keyword: '', alias: '' }, { keyword: '', alias: '' }], tags: [] };
     } else if (type === 'plain') {
         // 普通词组类型
-        newGroup = { type: 'plain', keywords: [] };
+        newGroup = { type: 'plain', keywords: [], tags: [] };
     }
 
     // 根据位置插入
@@ -2230,55 +2359,24 @@ window.updateGroupName = function(index, name) {
 }
 
 window.editKeyword = function(groupIndex, oldKeyword, spanElement) {
-    const data = currentFrequencyData || parseFrequencyText(currentFrequency);
-    const group = data.wordGroups[groupIndex];
-
-    // 只有 group-name 和 plain 类型才有 keywords 字段
-    if (group.type !== 'group-name' && group.type !== 'plain') {
-        return;
-    }
-
-    const originalKeyword = group.keywords.find(kw => kw === oldKeyword) || oldKeyword;
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = originalKeyword;
-    input.className = 'tag-input inline-block px-2 py-1 text-xs border border-blue-500 rounded';
-    input.style.minWidth = '100px';
-
-    const saveEdit = () => {
-        const newKeyword = input.value.trim();
-        if (newKeyword && newKeyword !== originalKeyword) {
-            const kwIndex = group.keywords.indexOf(originalKeyword);
-            if (kwIndex !== -1) {
-                group.keywords[kwIndex] = newKeyword;
+    openExpandableEditModal('编辑关键词', oldKeyword, (newKeyword) => {
+        if (newKeyword && newKeyword !== oldKeyword) {
+            const data = currentFrequencyData || parseFrequencyText(currentFrequency);
+            const group = data.wordGroups[groupIndex];
+            
+            if (group.type === 'group-name' || group.type === 'plain') {
+                const kwIndex = group.keywords.indexOf(oldKeyword);
+                if (kwIndex !== -1) {
+                    group.keywords[kwIndex] = newKeyword;
+                }
+                currentFrequency = buildFrequencyText(data);
+                currentFrequencyData = parseFrequencyText(currentFrequency);
+                document.getElementById('frequency-editor').value = currentFrequency;
+                updateBackdrop('frequency-editor', 'frequency-backdrop');
+                renderFrequencyPanel(currentFrequencyData);
             }
-            currentFrequency = buildFrequencyText(data);
-            // 重新解析以更新相关组信息
-            currentFrequencyData = parseFrequencyText(currentFrequency);
-            document.getElementById('frequency-editor').value = currentFrequency;
-    updateBackdrop('frequency-editor', 'frequency-backdrop');
-            renderFrequencyPanel(currentFrequencyData);
-        } else {
-            spanElement.style.display = '';
-            input.remove();
         }
-    };
-
-    input.onblur = saveEdit;
-    input.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-            saveEdit();
-        } else if (e.key === 'Escape') {
-            spanElement.style.display = '';
-            input.remove();
-        }
-    };
-
-    spanElement.style.display = 'none';
-    spanElement.parentNode.insertBefore(input, spanElement);
-    input.focus();
-    input.select();
+    });
 }
 
 window.handleKeywordInput = function(event, groupIndex) {
@@ -2395,6 +2493,32 @@ window.removeAliasItem = function(groupIndex, itemIndex) {
     updateBackdrop('frequency-editor', 'frequency-backdrop');
         renderFrequencyPanel(currentFrequencyData);
     }
+}
+
+// 更新词组标签
+window.updateGroupTags = function(groupIndex, tag, isChecked) {
+    const data = currentFrequencyData || parseFrequencyText(currentFrequency);
+    const group = data.wordGroups[groupIndex];
+
+    if (!group.tags) {
+        group.tags = [];
+    }
+
+    if (isChecked) {
+        // 添加标签
+        if (!group.tags.includes(tag)) {
+            group.tags.push(tag);
+        }
+    } else {
+        // 移除标签
+        group.tags = group.tags.filter(t => t !== tag);
+    }
+
+    currentFrequency = buildFrequencyText(data);
+    currentFrequencyData = parseFrequencyText(currentFrequency);
+    document.getElementById('frequency-editor').value = currentFrequency;
+    updateBackdrop('frequency-editor', 'frequency-backdrop');
+    renderFrequencyPanel(currentFrequencyData);
 }
 
 // DeepSeek AI 辅助
@@ -6246,6 +6370,37 @@ window.applyPreset = function(model, base) {
         baseInput.value = base || "";
         updateYamlFromUI('ai', 'api_base', baseInput);
     }
+
+    // 统一更新高亮状态
+    if (typeof updatePresetHighlight === 'function') {
+        updatePresetHighlight(model);
+    }
+};
+
+// 更新预设按钮的高亮状态
+window.updatePresetHighlight = function(currentModel) {
+    document.querySelectorAll('.ai-preset-btn').forEach(btn => {
+        if (btn.dataset.model === currentModel) {
+            btn.classList.remove('border-gray-300', 'text-gray-700', 'hover:bg-blue-50');
+            btn.classList.add('border-blue-200', 'bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
+        } else {
+            btn.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-blue-50');
+            btn.classList.remove('border-blue-200', 'bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
+        }
+    });
+
+    // 处理自定义预设的高亮
+    document.querySelectorAll('.custom-preset button').forEach(btn => {
+        // 由于自定义预设可能点击的是外层按钮，这里需要判断内容或 dataset (如果已设置)
+        // 简单处理：通过比较点击逻辑中的参数
+        if (btn.getAttribute('onclick')?.includes(`'${currentModel}'`)) {
+            btn.classList.remove('border-green-300', 'bg-green-50', 'text-green-700');
+            btn.classList.add('border-blue-500', 'bg-blue-600', 'text-white');
+        } else {
+            btn.classList.add('border-green-300', 'bg-green-50', 'text-green-700');
+            btn.classList.remove('border-blue-500', 'bg-blue-600', 'text-white');
+        }
+    });
 };
 
 window.renderCustomPresets = function() {
@@ -6282,20 +6437,73 @@ window.renderCustomPresets = function() {
 };
 
 window.addCustomPreset = function() {
-    const name = prompt("请输入自定义预设名称 (例如: 本地 Qwen):");
-    if (!name) return;
+    // 采用自定义模态框替代 prompt，解决部分环境弹窗被拦截或消失的问题
+    const modalId = 'add-custom-preset-modal';
+    if (document.getElementById(modalId)) return;
+
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200';
+    modal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 class="font-bold text-gray-800 flex items-center">
+                    <i class="fa-solid fa-plus-circle mr-2 text-blue-500"></i>添加自定义大模型
+                </h3>
+                <button onclick="document.getElementById('${modalId}').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">方案名称 (Name)</label>
+                    <input type="text" id="custom-name" placeholder="例如: 本地 Qwen" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">模型标识 (Model ID)</label>
+                    <input type="text" id="custom-model" placeholder="openai/deepseek-ai/DeepSeek-V3" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm">
+                    <p class="text-[10px] text-gray-400 mt-1">提示：中转平台请在模型前加上 openai/ 前缀</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">API Base URL (Optional)</label>
+                    <input type="text" id="custom-base" placeholder="http://localhost:11434" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm">
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-2">
+                <button onclick="document.getElementById('${modalId}').remove()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">取消</button>
+                <button id="save-custom-btn" class="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-200 transition-all active:scale-95">保存方案</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
     
-    const model = prompt("请输入模型标识 (如果使用兼容 OpenAI 的中转/非原生平台，请在模型前加上 openai/，例如: openai/deepseek-ai/DeepSeek-V3):");
-    if (!model) return;
-    
-    const base = prompt("请输入 API Base URL (如果有, 例如: http://localhost:11434):", "");
-    
-    const presets = JSON.parse(localStorage.getItem('aiyxdata_tradar_custom_ai_presets') || '[]');
-    presets.push({ name, model, base });
-    localStorage.setItem('aiyxdata_tradar_custom_ai_presets', JSON.stringify(presets));
-    
-    renderCustomPresets();
-    showToast('自定义预设已保存', 'success');
+    // Focus first input
+    setTimeout(() => document.getElementById('custom-name').focus(), 100);
+
+    // Save logic
+    document.getElementById('save-custom-btn').onclick = function() {
+        const name = document.getElementById('custom-name').value.trim();
+        const model = document.getElementById('custom-model').value.trim();
+        const base = document.getElementById('custom-base').value.trim();
+        
+        if (!name || !model) {
+            showToast('请完整填写名称和模型标识', 'error');
+            return;
+        }
+        
+        const presets = JSON.parse(localStorage.getItem('aiyxdata_tradar_custom_ai_presets') || '[]');
+        presets.push({ name, model, base });
+        localStorage.setItem('aiyxdata_tradar_custom_ai_presets', JSON.stringify(presets));
+        
+        renderCustomPresets();
+        showToast('自定义预设已保存', 'success');
+        modal.remove();
+    };
+
+    // Close on background click
+    modal.onclick = function(e) {
+        if (e.target === modal) modal.remove();
+    };
 };
 
 window.deleteCustomPreset = function(index) {
@@ -6368,7 +6576,7 @@ window.openModelQueryModal = function() {
     // 创建模态框 HTML
     const modalHtml = `
     <div id="modelQueryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-hidden" style="resize: both; min-width: 400px; min-height: 300px;">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-screen overflow-hidden" style="resize: both; min-width: 500px; min-height: 400px; max-width: 90vw; max-height: 90vh;">
             <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
                 <h3 class="text-lg font-bold text-gray-800">🔍 查询可用模型</h3>
                 <button onclick="closeModelQueryModal()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
@@ -6395,7 +6603,7 @@ window.openModelQueryModal = function() {
                     <div class="mb-3">
                         <input type="text" id="modelSearchInput" placeholder="🔍 搜索模型..." class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500" oninput="filterModels()">
                     </div>
-                    <div id="modelList" class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                    <div id="modelList" class="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
                         <div class="col-span-2 text-center text-gray-500 py-4">
                             <i class="fa-solid fa-spinner fa-spin mr-2"></i>加载中...
                         </div>
@@ -6429,12 +6637,7 @@ window.openModelQueryModal = function() {
     document.getElementById('displayApiBase').textContent = apiBase || '(未设置)';
     document.getElementById('displayApiKey').textContent = apiKey ? apiKey.substring(0, 10) + '...' : '(未设置)';
 
-    // 关闭模态框时的点击事件
-    document.getElementById('modelQueryModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModelQueryModal();
-        }
-    });
+    // 禁止点击背景关闭弹窗（用户要求只能通过关闭按钮关闭）
 };
 
 // 关闭模型查询模态框
@@ -6474,6 +6677,8 @@ window.testAIConnection = function() {
     .then(data => {
         if (data.success) {
             statusDiv.innerHTML = '<div class="text-green-600"><i class="fa-solid fa-check-circle mr-2"></i>连接成功！</div>';
+            // 立即显示步骤2（搜索框和模型列表区域）
+            document.getElementById('step2-models').style.display = 'block';
             // 加载模型列表
             setTimeout(() => fetchAvailableModels(apiBase, apiKey), 500);
         } else {
@@ -6500,25 +6705,31 @@ window.fetchAvailableModels = function(apiBase, apiKey) {
     })
     .then(r => r.json())
     .then(data => {
-        if (data.success && data.models && data.models.length > 0) {
-            // 显示步骤 2
-            document.getElementById('step2-models').style.display = 'block';
+        console.log('[Model Query] API响应:', data);
 
-            // 渲染模型列表
-            const modelsHtml = data.models.map(model => `
-                <button type="button" onclick="selectModel('${model}')" class="p-3 border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-500 text-left text-xs transition-colors">
-                    <div class="font-medium text-gray-800">${model}</div>
-                    <div class="text-gray-500 text-xs mt-1">点击选择</div>
-                </button>
-            `).join('');
+        if (data.success) {
+            if (data.models && data.models.length > 0) {
+                // 渲染模型列表
+                const modelsHtml = data.models.map(model => `
+                    <button type="button" onclick="selectModel('${model}')" class="p-3 border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-500 text-left text-xs transition-colors">
+                        <div class="font-medium text-gray-800">${model}</div>
+                        <div class="text-gray-500 text-xs mt-1">点击选择</div>
+                    </button>
+                `).join('');
 
-            modelListDiv.innerHTML = modelsHtml;
+                modelListDiv.innerHTML = modelsHtml;
+            } else {
+                // 连接成功但没有模型
+                modelListDiv.innerHTML = '<div class="col-span-2 text-center text-orange-600 py-4"><i class="fa-solid fa-exclamation-triangle mr-2"></i>连接成功但未获取到模型列表<br><span class="text-xs text-gray-500">可能原因：API Key权限不足或账户未配置模型</span></div>';
+            }
         } else {
-            modelListDiv.innerHTML = '<div class="col-span-2 text-center text-red-600 py-4"><i class="fa-solid fa-exclamation-circle mr-2"></i>无法获取模型列表</div>';
+            // API返回错误
+            modelListDiv.innerHTML = `<div class="col-span-2 text-center text-red-600 py-4"><i class="fa-solid fa-exclamation-circle mr-2"></i>获取模型列表失败<br><span class="text-xs text-gray-500">${data.error || '未知错误'}</span></div>`;
         }
     })
     .catch(err => {
-        modelListDiv.innerHTML = `<div class="col-span-2 text-center text-red-600 py-4"><i class="fa-solid fa-exclamation-circle mr-2"></i>加载失败: ${err.message}</div>`;
+        console.error('[Model Query] 请求失败:', err);
+        modelListDiv.innerHTML = `<div class="col-span-2 text-center text-red-600 py-4"><i class="fa-solid fa-exclamation-circle mr-2"></i>加载失败<br><span class="text-xs text-gray-500">${err.message}</span></div>`;
     });
 };
 
@@ -6591,3 +6802,95 @@ window.applyModelConfig = function(modelName) {
 };
 
 // --- End AI Model Query Logic ---
+
+// ==========================================
+// 扩大编辑模态框
+// ==========================================
+window.openExpandableEditModal = function(title, value, saveCallback) {
+    // 移除已有的模态框
+    const existing = document.getElementById('expandable-edit-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'expandable-edit-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-content modal-content-animated" style="max-width: 600px; padding: 20px;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-blue-500"></i>
+                    ${title}
+                </h3>
+                <button onclick="closeExpandableEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <textarea id="expandable-edit-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all font-mono text-sm" rows="5" placeholder="请输入..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeExpandableEditModal()" class="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">
+                    取消
+                </button>
+                <button id="expandable-edit-save" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm hover:shadow transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i>
+                    保存更改
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const input = document.getElementById('expandable-edit-input');
+    input.value = value;
+    
+    // 聚焦并将光标移到最后
+    setTimeout(() => {
+        input.focus();
+        input.selectionStart = input.selectionEnd = input.value.length;
+    }, 100);
+    
+    const saveBtn = document.getElementById('expandable-edit-save');
+    const handleSave = () => {
+        saveCallback(input.value.trim());
+        closeExpandableEditModal();
+    };
+    
+    saveBtn.onclick = handleSave;
+    
+    // 支持 Ctrl+Enter 快捷保存
+    input.onkeydown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            handleSave();
+        } else if (e.key === 'Escape') {
+            closeExpandableEditModal();
+        }
+    };
+};
+
+window.closeExpandableEditModal = function() {
+    const modal = document.getElementById('expandable-edit-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        setTimeout(() => modal.remove(), 200);
+    }
+};
+
+window.editGlobalFilter = function(oldFilter, spanElement) {
+    openExpandableEditModal('编辑全局过滤词', oldFilter, (newFilter) => {
+        if (newFilter && newFilter !== oldFilter) {
+            const data = currentFrequencyData || parseFrequencyText(currentFrequency);
+            const filterIndex = data.globalFilter.indexOf(oldFilter);
+            if (filterIndex !== -1) {
+                data.globalFilter[filterIndex] = newFilter;
+                currentFrequency = buildFrequencyText(data);
+                currentFrequencyData = parseFrequencyText(currentFrequency);
+                document.getElementById('frequency-editor').value = currentFrequency;
+                updateBackdrop('frequency-editor', 'frequency-backdrop');
+                renderFrequencyPanel(currentFrequencyData);
+            }
+        }
+    });
+};

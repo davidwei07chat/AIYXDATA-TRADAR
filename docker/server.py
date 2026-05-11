@@ -503,6 +503,27 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 return self.send_json_response(500, {"success": False, "error": str(e)})
 
+        # 3b. AI 强制刷新 (Force AI Analysis Refresh)
+        elif path == '/api/ai_refresh':
+            try:
+                import subprocess
+                # 触发 AI 分析与报告生成 (Trigger AI analysis and report generation)
+                cmd = ["python3", os.path.abspath(__file__).replace("server.py", "manage.py"), "run"]
+                subprocess.Popen(cmd)
+
+                # 获取最新报告 (Get latest report)
+                latest_report = self.get_latest_ai_report()
+
+                return self.send_json_response(200, {
+                    "success": True,
+                    "message": "AI 分析已更新",
+                    "content": latest_report.get('content', ''),
+                    "timestamp": latest_report.get('timestamp', datetime.now().isoformat()),
+                    "model": latest_report.get('model', 'Unknown')
+                })
+            except Exception as e:
+                return self.send_json_response(500, {"success": False, "error": str(e)})
+
         # 4. 检查 AI 连接 (Check AI Connection)
         elif path == '/api/check_ai_connection':
             api_base = payload.get('api_base') or "https://api.openai.com/v1"
@@ -525,17 +546,50 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
                 # 发送测试请求 (Send test request)
                 response = requests.get(check_url, headers=headers, timeout=10)
                 
-                # 如果 /models 不存在 (404)，尝试以最小代价请求 /chat/completions 进行验证
-                if response.status_code == 404:
-                    chat_url = f"{base_url}/chat/completions"
+                # 检查是否为有效 JSON，有些代理域会把错误路径返回 200 OK 加上 HTML 页面
+                is_valid_json = False
+                try:
+                    data = response.json()
+                    is_valid_json = True
+                except:
+                    pass
+
+                # 如果 /models 不存在或返回非 JSON，并且 api_base 没有 /v1 且没有被手动强制使用
+                if (response.status_code == 404 or not is_valid_json) and not base_url.endswith('/v1'):
+                    # 尝试添加 /v1 重试
+                    v1_url = f"{base_url}/v1/models"
+                    try:
+                        v1_response = requests.get(v1_url, headers=headers, timeout=10)
+                        if v1_response.status_code == 200:
+                            try:
+                                v1_response.json()
+                                response = v1_response
+                                is_valid_json = True
+                            except:
+                                pass
+                    except:
+                        pass
+
+                # 如果 /models 测试最终还是失败，尝试以最小代价请求 /chat/completions 进行验证
+                if response.status_code == 404 or not is_valid_json:
+                    chat_base = base_url
+                    if not base_url.endswith('/v1') and (response.status_code == 404 or not is_valid_json):
+                        chat_base = f"{base_url}/v1"
+                    chat_url = f"{chat_base}/chat/completions"
                     chat_payload = {
                         "model": payload.get('model') or "gpt-3.5-turbo",
                         "messages": [{"role": "user", "content": "hi"}],
                         "max_tokens": 1
                     }
-                    response = requests.post(chat_url, headers=headers, json=chat_payload, timeout=10)
+                    try:
+                        chat_resp = requests.post(chat_url, headers=headers, json=chat_payload, timeout=10)
+                        if chat_resp.status_code == 200:
+                            response = chat_resp
+                            is_valid_json = True
+                    except:
+                        pass
 
-                if response.status_code == 200:
+                if response.status_code == 200 and is_valid_json:
                     return self.send_json_response(200, {"success": True, "message": "连接成功 / Connection Successful"})
                 else:
                     try:
@@ -549,8 +603,11 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
 
         # 5. 获取 AI 模型列表 (Get AI Model List)
         elif path == '/api/get_ai_models':
+            import sys
+            print(f"[DEBUG] 开始处理 get_ai_models 请求", file=sys.stderr, flush=True)
             api_base = payload.get('api_base') or "https://api.openai.com/v1"
             api_key = payload.get('api_key')
+            print(f"[DEBUG] api_base={api_base}, api_key={'***' if api_key else None}", file=sys.stderr, flush=True)
 
             if not api_key:
                 return self.send_json_response(400, {"success": False, "error": "Missing API Key"})
@@ -559,6 +616,7 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
                 import requests
                 base_url = api_base.rstrip('/')
                 check_url = f"{base_url}/models"
+                print(f"[DEBUG] check_url={check_url}", file=sys.stderr, flush=True)
                 
                 headers = {
                     "Authorization": f"Bearer {api_key}",
@@ -566,27 +624,106 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
                 }
 
                 response = requests.get(check_url, headers=headers, timeout=10)
-                
-                if response.status_code == 200:
+                print(f"[DEBUG] 第一次请求完成: status={response.status_code}", file=sys.stderr, flush=True)
+
+                is_valid_json = False
+                try:
                     data = response.json()
+                    is_valid_json = True
+                    print(f"[DEBUG] JSON解析成功", file=sys.stderr, flush=True)
+                except Exception as e:
+                    print(f"[DEBUG] JSON解析失败: {e}", file=sys.stderr, flush=True)
+                    pass
+
+                # 自动尝试 /v1 后缀
+                if (response.status_code == 404 or not is_valid_json) and not base_url.endswith('/v1'):
+                    print(f"[DEBUG] 尝试 /v1 路径", file=sys.stderr, flush=True)
+                    v1_url = f"{base_url}/v1/models"
+                    try:
+                        v1_response = requests.get(v1_url, headers=headers, timeout=10)
+                        print(f"[DEBUG] v1请求完成: status={v1_response.status_code}", file=sys.stderr, flush=True)
+                        # 只要v1返回的是有效JSON，就使用v1的响应（即使是错误响应）
+                        try:
+                            v1_data = v1_response.json()
+                            response = v1_response
+                            data = v1_data
+                            is_valid_json = True
+                            print(f"[DEBUG] 切换到v1成功, data={v1_data}", file=sys.stderr, flush=True)
+                        except Exception as e:
+                            print(f"[DEBUG] v1 JSON解析失败: {e}", file=sys.stderr, flush=True)
+                            pass
+                    except Exception as e:
+                        print(f"[DEBUG] v1请求失败: {e}", file=sys.stderr, flush=True)
+                        pass
+
+                if response.status_code == 200 and is_valid_json:
+                    print(f"[DEBUG] 进入成功分支", file=sys.stderr, flush=True)
                     # 提取模型 ID (Extract model IDs)
                     models = []
-                    if isinstance(data, dict) and 'data' in data:
-                        for m in data['data']:
-                            if isinstance(m, dict) and 'id' in m:
-                                models.append(m['id'])
+
+                    # 调试日志 (Debug logging)
+                    print(f"[API] 原始响应类型: {type(data)}")
+                    print(f"[API] 原始响应内容: {json.dumps(data, ensure_ascii=False)[:500]}")
+
+                    if isinstance(data, dict):
+                        # 尝试多种可能的字段名
+                        data_list = data.get('data') or data.get('models') or data.get('result') or data.get('items')
+                        print(f"[API] 提取到的data_list: {type(data_list)}, 长度: {len(data_list) if isinstance(data_list, list) else 'N/A'}")
+
+                        if data_list and isinstance(data_list, list):
+                            for m in data_list:
+                                if isinstance(m, dict):
+                                    # 尝试多种可能的ID字段名
+                                    model_id = m.get('id') or m.get('model') or m.get('name') or m.get('model_id')
+                                    if model_id:
+                                        models.append(model_id)
+                                        print(f"[API] 添加模型: {model_id}")
                     elif isinstance(data, list):
                         # 兼容某些非标准返回 (Compat for non-standard returns)
+                        print(f"[API] 数据是直接数组，长度: {len(data)}")
                         for m in data:
-                            if isinstance(m, dict) and 'id' in m:
-                                models.append(m['id'])
-                    
+                            if isinstance(m, dict):
+                                model_id = m.get('id') or m.get('model') or m.get('name') or m.get('model_id')
+                                if model_id:
+                                    models.append(model_id)
+                                    print(f"[API] 添加模型: {model_id}")
+
                     # 按字母排序 (Sort alphabetically)
                     models.sort()
+                    print(f"[API] 最终提取到的模型数: {len(models)}, 模型列表: {models}")
                     return self.send_json_response(200, {"success": True, "models": models})
                 else:
-                    return self.send_json_response(200, {"success": False, "error": f"API 返回错误 ({response.status_code})"})
+                    print(f"[DEBUG] 进入错误处理分支: status={response.status_code}, is_valid_json={is_valid_json}", file=sys.stderr, flush=True)
+                    # 处理非200状态码或无效JSON
+                    err_msg = "未知错误"
+                    if is_valid_json:
+                        print(f"[DEBUG] 使用data提取错误: data={data}", file=sys.stderr, flush=True)
+                        # 如果已经成功解析了JSON，使用data变量
+                        try:
+                            if isinstance(data, dict):
+                                err_msg = data.get('error', {}).get('message') or data.get('message') or data.get('code') or str(data)
+                            else:
+                                err_msg = str(data)
+                            print(f"[DEBUG] 提取的错误信息: {err_msg}", file=sys.stderr, flush=True)
+                        except Exception as e:
+                            print(f"[DEBUG] 提取错误信息失败: {e}", file=sys.stderr, flush=True)
+                            err_msg = f"HTTP {response.status_code}"
+                    else:
+                        print(f"[DEBUG] 使用response.text提取错误", file=sys.stderr, flush=True)
+                        # JSON解析失败，使用响应文本
+                        try:
+                            err_msg = response.text[:200] if response.text else f"HTTP {response.status_code}"
+                            print(f"[DEBUG] response.text前50字符: {err_msg[:50]}", file=sys.stderr, flush=True)
+                        except Exception as e:
+                            print(f"[DEBUG] 获取response.text失败: {e}", file=sys.stderr, flush=True)
+                            err_msg = f"HTTP {response.status_code}"
+
+                    print(f"[DEBUG] 最终错误信息: {err_msg[:100]}", file=sys.stderr, flush=True)
+                    return self.send_json_response(200, {"success": False, "error": f"API 返回错误 ({response.status_code}): {err_msg[:100]}"})
             except Exception as e:
+                print(f"[DEBUG] 捕获异常: {type(e).__name__}: {str(e)}", file=sys.stderr, flush=True)
+                import traceback
+                traceback.print_exc(file=sys.stderr)
                 return self.send_json_response(200, {"success": False, "error": f"获取失败: {str(e)}"})
 
         # 6. 生成报告 (Generate Report)
@@ -738,6 +875,46 @@ class ConfigServerHandler(SimpleHTTPRequestHandler):
 
         else:
             return self.send_json_response(404, {"success": False, "error": f"API endpoint {path} not found."})
+
+    def get_latest_ai_report(self):
+        """获取最新的 AI 分析报告 (Get latest AI analysis report)"""
+        try:
+            from pathlib import Path
+            import re
+
+            # 查找最新的 HTML 报告文件 (Find latest HTML report file)
+            output_dir = Path(WEBSERVER_DIR) / "html" / "latest"
+            if not output_dir.exists():
+                return {"content": "", "timestamp": "", "model": ""}
+
+            html_files = sorted(output_dir.glob("*.html"), reverse=True)
+            if not html_files:
+                return {"content": "", "timestamp": "", "model": ""}
+
+            # 解析最新的 HTML 文件 (Parse latest HTML file)
+            with open(html_files[0], 'r', encoding='utf-8') as f:
+                content = f.read()
+
+                # 提取 raw-ai-content textarea 的内容 (Extract raw-ai-content)
+                match = re.search(r'<textarea id="raw-ai-content"[^>]*>(.*?)</textarea>', content, re.DOTALL)
+                ai_content = match.group(1) if match else ""
+
+                # 提取时间戳 (Extract timestamp)
+                time_match = re.search(r'<span id="ai-update-time">([^<]*)</span>', content)
+                timestamp = time_match.group(1) if time_match else ""
+
+                # 提取模型信息 (Extract model info)
+                model_match = re.search(r'<span id="ai-model">([^<]*)</span>', content)
+                model = model_match.group(1) if model_match else ""
+
+                return {
+                    "content": ai_content,
+                    "timestamp": timestamp,
+                    "model": model
+                }
+        except Exception as e:
+            print(f"[API] 获取最新报告出错: {e}")
+            return {"content": "", "timestamp": "", "model": ""}
 
 
 def run(server_class=HTTPServer, handler_class=ConfigServerHandler, port=WEBSERVER_PORT, directory=WEBSERVER_DIR):

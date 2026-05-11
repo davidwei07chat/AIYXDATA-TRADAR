@@ -35,6 +35,7 @@
   - 2026-04-24 15:52: 修复配置文件读取失败问题，调整 CONFIG_DIR 路径检测顺序（/TrendRadar/config 优先于 /app/config），解决配置编辑器无法加载配置文件的问题；验证所有配置文件（config.yaml、frequency_words.txt、timeline.yaml、ai_analysis_prompt.txt、ai_translation_prompt.txt）均可正常读取。 (Fixed configuration file read failure by reordering CONFIG_DIR path detection (/TrendRadar/config prioritized over /app/config); verified all config files load successfully.)
   - 2026-04-24 16:30: 优化 AI 模型查询弹出框，添加搜索过滤功能和可调整大小功能；增强拖拽区域可视化（40px × 40px 渐变三角形），提升用户体验。 (Optimized AI model query modal with search filtering and resizable functionality; enhanced drag area visualization (40px × 40px gradient triangle) for better UX.)
   - 2026-04-26 21:40: 修复手动刷新按钮失效问题，将 `manage.py` 中的硬编码路径从 `/AIYXDATA-TRADAR` 修正为动态探测的 `/app`；修复新增 RSS 源不显示问题，将 `huxiu` 和 `timednews` 同步至 `standalone` 显示白名单。 (Fixed manual refresh button failure by correcting hardcoded path in `manage.py` to dynamic `/app`; fixed missing RSS source display by syncing `huxiu` and `timednews` to the `standalone` display whitelist.)
+  - 2026-05-11 19:00: 修复模型查询功能的容器部署问题和多格式兼容性问题；解决 Docker 容器工作目录导致的代码版本不一致；增强后端模型提取逻辑支持多种 API 格式；实现自动重试 /v1 路径；优化前端模态框交互体验；完善错误处理机制。 (Fixed model query feature container deployment and multi-format compatibility issues; resolved code version inconsistency caused by Docker working directory; enhanced backend model extraction to support multiple API formats; implemented auto-retry for /v1 path; optimized frontend modal interaction; improved error handling mechanism.)
 
 - **技术栈信息 (Tech Stack)**:
   - **核心框架 (Core Framework)**: Python 3.10+, HTML5, Vanilla CSS, Vanilla JavaScript
@@ -256,8 +257,8 @@ The system pre-sets 7 distinctive themes, ranging from eye-comfort to high-contr
 ## 9. 异常处理记录与踩坑复盘 / Issues & Troubleshooting
 - **Docker 缓存与热更新误区**: 
   - **现象**: 修改 `html_v2.py` 后生成的报告依然是旧版，且前端代码未看到 `marked.js`。
-  - **根源**: 由于 `trendradar` 容器是长连接常驻服务，Python 模块在启动时已加载至内存。虽然 host 文件已变动，但运行中的进程未重启。
-  - **对策**: 在应用关键代码修改后，**必须**执行 `docker restart` 命令重启相关容器。
+  - **根源**: 由于 `aiyxdata_tradar` 容器是长连接常驻服务，Python 模块在启动时已加载至内存。虽然 host 文件已变动，但运行中的进程未重启。
+  - **对策**: 在应用关键代码修改后，**必须**执行 `docker restart aiyxdata_tradar` 命令重启相关容器。
 - **功能干扰与回归测试失效**:
   - **现象**: 修复 AI 渲染问题后，首页的主题选择下拉框失效。
   - **根源**: 在重构 `html_v2.py` 以注入 `marked.js` 逻辑时，不慎删除了 `setTheme` 函数及其持久化代码。
@@ -349,30 +350,133 @@ The system pre-sets 7 distinctive themes, ranging from eye-comfort to high-contr
     2. ✅ 虎嗅 (huxiu) 已成功抓取并在独立卡片中显示。
     3. ✅ 明确了时刻新闻抓取失败的外部原因为 403 拦截。
 
+- **模型查询功能容器部署与多格式兼容性问题 (Model Query Feature Container Deployment & Multi-format Compatibility Issues)**:
+  - **表现 (Symptoms)**:
+    1. 用户反馈模型查询功能失败，错误信息为 "Expecting value: line 1 column 1 (char 0)"。
+    2. 修改后端代码后重启容器，但调试日志没有出现，服务仍运行旧代码。
+    3. 端口 8084 无法访问，`netstat` 显示没有进程监听该端口。
+    4. 容器日志显示的是几小时前的旧请求记录。
+    5. 不同 API 提供商的模型列表获取失败，部分返回 HTML 而非 JSON。
+  - **原因 (Cause)**:
+    1. **容器工作目录问题**: Docker 容器的工作目录是 `/app/docker`，启动命令 `python3 server.py` 使用相对路径，实际运行的是容器镜像内置的旧版本 `/app/docker/server.py`（37KB，2026-05-03），而不是 volume 挂载的新版本 `/app/server.py`（44KB，2026-05-11）。
+    2. **Volume 挂载配置**: `docker-compose.yml` 中配置了 `./server.py:/app/server.py` 挂载，但容器工作目录在 `/app/docker`，导致挂载的文件未被使用。
+    3. **端口映射缺失**: 容器通过 `docker restart` 重启后，端口映射配置丢失，导致 8084 端口未监听。
+    4. **API 格式差异**: 不同 API 提供商返回的模型列表格式不一致：
+       - 容器字段：`data`（OpenAI/SiliconFlow）、`models`、`result`、`items`
+       - ID 字段：`id`（标准）、`model`、`name`、`model_id`
+       - 端点差异：`/models` 返回 HTML，`/v1/models` 返回 JSON
+    5. **错误处理不足**: 后端对非 JSON 响应调用 `.json()` 导致解析错误，错误信息不够详细。
+  - **修复 (Fix)**:
+    1. **容器重建** (`/TrendRadar/docker/`):
+       ```bash
+       # 停止并删除旧容器
+       docker-compose stop aiyxdata_tradar
+       docker-compose rm -f aiyxdata_tradar
+       
+       # 使用 docker-compose 重新创建容器（确保端口映射 127.0.0.1:8084:8080 正确）
+       docker-compose up -d aiyxdata_tradar
+       
+       # 复制新版本到容器工作目录
+       docker exec aiyxdata_tradar cp /app/server.py /app/docker/server.py
+       
+       # 重启容器加载新代码
+       docker restart aiyxdata_tradar
+       ```
+    2. **多格式模型提取** (`/TrendRadar/docker/server.py` 第 605-710 行):
+       ```python
+       # 支持多种容器字段名
+       data_list = data.get('data') or data.get('models') or data.get('result') or data.get('items')
+       
+       if data_list and isinstance(data_list, list):
+           for m in data_list:
+               if isinstance(m, dict):
+                   # 支持多种ID字段名
+                   model_id = m.get('id') or m.get('model') or m.get('name') or m.get('model_id')
+                   if model_id:
+                       models.append(model_id)
+       ```
+    3. **自动重试 /v1 路径** (`/TrendRadar/docker/server.py` 第 631-646 行):
+       ```python
+       # 当 /models 返回 404 或非 JSON 时，自动尝试 /v1/models
+       if (response.status_code == 404 or not is_valid_json) and not base_url.endswith('/v1'):
+           v1_url = f"{base_url}/v1/models"
+           print(f"[DEBUG] 尝试 /v1 路径: {v1_url}", file=sys.stderr, flush=True)
+           v1_response = requests.get(v1_url, headers=headers, timeout=10)
+           v1_data = v1_response.json()
+           response = v1_response
+           data = v1_data
+           is_valid_json = True
+       ```
+    4. **改进错误处理** (`/TrendRadar/docker/server.py` 第 683-703 行):
+       ```python
+       # 避免对非 JSON 响应调用 .json()
+       if is_valid_json:
+           # 使用已解析的 data 变量
+           err_msg = data.get('message') or data.get('code') or str(data)
+       else:
+           # 使用 response.text 而不是再次调用 json()
+           err_msg = response.text[:200]
+       
+       return self.send_json_response(200, {
+           "success": False,
+           "error": f"API 返回错误 ({response.status_code}): {err_msg}"
+       })
+       ```
+    5. **前端优化** (`/TrendRadar/output/config_editor/assets/script.js`):
+       - 第 6579 行：增大模态框尺寸（500x400 最小，90vw×90vh 最大）
+       - 第 6606 行：增加模型列表高度（max-h-96，384px）
+       - 第 6640 行：禁止背景点击关闭模态框
+       - 第 6686 行：连接成功后立即显示步骤2（搜索框和模型列表区域）
+  - **预防 (Prevention)**:
+    1. **容器启动命令**: 建议修改 Dockerfile 或 docker-compose.yml，使用绝对路径启动：`command: python3 /app/server.py`，或修改工作目录：`working_dir: /app`。
+    2. **Volume 挂载策略**: 对于需要热更新的文件，应确保挂载路径与实际运行路径一致，或使用目录挂载而非单文件挂载。
+    3. **容器管理规范**: 使用 `docker-compose` 管理容器生命周期，避免使用 `docker run` 手动创建容器导致配置不一致。
+    4. **API 兼容性设计**: 在对接第三方 API 时，应预留多种格式的兼容逻辑，避免硬编码字段名。
+    5. **错误处理原则**: 在解析外部数据前，应先验证数据类型和格式，避免盲目调用可能失败的方法。
+    6. **调试日志规范**: 使用 `sys.stderr` 输出调试信息，并添加 `flush=True` 确保日志实时输出到容器日志。
+    7. **部署验证清单**: 
+       - 检查容器端口映射是否正确（`docker ps` 或 `docker inspect`）
+       - 验证文件修改时间是否一致（宿主机 vs 容器内）
+       - 测试 API 端点是否可访问（`curl` 或 `netstat`）
+       - 查看容器日志确认新代码已加载（检查调试输出）
+  - **结果 (Result)**:
+    1. ✅ 容器端口 8084 正常监听，服务可访问。
+    2. ✅ 调试日志正常输出，显示详细的请求处理过程。
+    3. ✅ 支持多种 API 提供商（SiliconFlow、OpenAI、DeepSeek、自定义）。
+    4. ✅ 自动处理 `/models` 和 `/v1/models` 端点差异。
+    5. ✅ 错误信息详细明确，不再出现 "Expecting value" 错误。
+    6. ✅ 前端模态框交互体验优化：
+       - 连接成功后立即显示搜索框
+       - 模态框尺寸可调整（500x400 ~ 90vw×90vh）
+       - 只能通过关闭按钮关闭，防止误操作
+       - 模型列表高度增加，可显示更多内容
+    7. ✅ 代码版本一致性问题已解决，修改后的代码正确加载。
+
 - **Nginx 反向代理端口配置错误 (Nginx Reverse Proxy Port Mismatch)**:
   - **表现 (Symptoms)**: 
     1. 外部访问 `https://trendradar.aiyxtech.us.kg` 返回 502 Bad Gateway 错误。
-    2. 本地直接访问 `http://127.0.0.1:8080/api/search` 正常返回 JSON 数据。
+    2. 本地直接访问 `http://127.0.0.1:8084/api/search` 正常返回 JSON 数据（通过 docker-compose 端口映射）。
     3. 同服务器其他网址正常，仅 trendradar 项目出现 502 错误。
-    4. Nginx 错误日志显示 `recv() failed (104: Connection reset by peer) while reading response header from upstream, upstream: "http://127.0.0.1:8084/"`。
+    4. Nginx 错误日志显示 `recv() failed (104: Connection reset by peer) while reading response header from upstream`。
   - **原因 (Cause)**: 
-    1. **配置不匹配**: Flask 服务器运行在端口 8080，但 Nginx 反向代理配置指向端口 8084。
-    2. **根本原因**: 可能是之前修改过 Flask 端口但未同步更新 Nginx 配置，或配置文件在部署时出现版本不一致。
-    3. **发现过程**: 通过 `ss -tlnp` 命令发现 Flask 监听 8080，但 `/etc/nginx/sites-available/trendradar.aiyxtech.us.kg.conf` 中 `proxy_pass` 指向 8084。
+    1. **配置不匹配**: Docker 容器通过 `docker-compose.yml` 配置端口映射为 `127.0.0.1:8084:8080`（宿主机 8084 映射到容器 8080），但 Nginx 反向代理配置指向了错误的端口。
+    2. **根本原因**: 配置文件在部署时出现版本不一致，或修改了 docker-compose 端口映射但未同步更新 Nginx 配置。
+    3. **发现过程**: 通过 `ss -tlnp` 命令发现 docker-proxy 监听 127.0.0.1:8084，检查 `docker-compose.yml` 确认端口映射，然后对比 Nginx 配置文件。
   - **修复 (Fix)**:
     1. **定位问题** (`/etc/nginx/sites-available/trendradar.aiyxtech.us.kg.conf` 第 16 行):
        ```nginx
-       # 修改前 (Before)
-       proxy_pass http://127.0.0.1:8084;
+       # 修改前 (Before) - 如果配置错误
+       proxy_pass http://127.0.0.1:8080;  # 错误：直接访问容器内部端口（无法访问）
        
-       # 修改后 (After)
-       proxy_pass http://127.0.0.1:8080;
+       # 修改后 (After) - 正确配置
+       proxy_pass http://127.0.0.1:8084;  # 正确：通过 docker-compose 端口映射访问
        ```
     2. **验证配置**: 执行 `nginx -t` 确保配置语法正确。
     3. **重新加载**: 执行 `nginx -s reload` 或 `systemctl reload nginx` 使配置生效。
     4. **验证修复**: 
        - 本地测试: `curl http://127.0.0.1/api/search?kw=AI` → 返回 JSON 数据
        - 远程测试: `curl -k https://trendradar.aiyxtech.us.kg/api/search?kw=AI` → 返回 JSON 数据
+    3. **验证端口映射**: 确认 `docker-compose.yml` 中端口映射为 `127.0.0.1:8084:8080`，容器名称为 `aiyxdata_tradar`。
   - **预防 (Prevention)**:
     1. **配置管理**: 使用环境变量或配置管理工具（Ansible、Terraform）维护 Nginx 配置，避免硬编码端口号。
     2. **文档同步**: 在修改应用端口时，同时更新 Nginx 配置文档和部署清单。
@@ -452,7 +556,9 @@ The system pre-sets 7 distinctive themes, ranging from eye-comfort to high-contr
 ## 12. 运维与进阶调试 / Ops & Advanced Debugging
 
 ### 12.1 日志与错误定位 / Logging
-- **实时追踪**: 使用 `docker logs -f trendradar` 查看实时标准输出。
+- **实时追踪**: 使用 `docker logs -f aiyxdata_tradar` 查看实时标准输出。
+- **查看最近日志**: 使用 `docker logs --tail 100 aiyxdata_tradar` 查看最近100行日志。
+- **带时间戳查看**: 使用 `docker logs -t aiyxdata_tradar` 查看带时间戳的日志。
 - **调试模式**: 在 `config.yaml` 中设置 `DEBUG: true`，系统将输出详细的爬虫抓取细节及 AI 原始请求。
 
 ### 12.2 环境依赖陷阱 / Dependency Pitfalls

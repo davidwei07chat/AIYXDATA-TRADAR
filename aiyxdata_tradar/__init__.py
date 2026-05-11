@@ -12,5 +12,5 @@ TrendRadar - 热点新闻聚合与分析工具
 
 from aiyxdata_tradar.context import AppContext
 
-__version__ = "6.0.0"
+__version__ = "6.2.0"
 __all__ = ["AppContext", "__version__"]

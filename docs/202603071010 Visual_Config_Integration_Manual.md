@@ -20,6 +20,8 @@ This document details the integration design, implementation logic, file paths, 
 - **2026-04-20 14:30:** 修复数字导航按钮在锁定状态下的可用性，确保用户在锁定编辑时仍可快速定位配置模块；移除 AiYX Data Radar 标题的超链接，使文字可直接复制。/ Fixed module navigation buttons (1-11) to remain functional in locked state for quick module navigation; removed hyperlink from AiYX Data Radar title to allow direct text copying.
 - **2026-04-23 08:54:** 修复 Nginx 反向代理端口配置错误（8084 → 8080），解决 502 Bad Gateway 问题；修复数据库查询字段不匹配（published_at → first_crawl_time），确保所有 API 功能正常工作。/ Fixed Nginx reverse proxy port configuration (8084 → 8080) to resolve 502 Bad Gateway; fixed database query field mismatch (published_at → first_crawl_time) to ensure all APIs work correctly.
 - **2026-04-24 16:30:** 优化 AI 模型查询弹出框，添加搜索过滤功能和可调整大小功能；增强拖拽区域可视化，提升用户体验。/ Optimized AI model query modal with search filtering and resizable functionality; enhanced drag area visualization for better UX.
+- **2026-05-05 22:30:** 修复了频率词编辑模态框中特殊字符（如正则 `\b`）转义不当导致的乱码问题；优化了编辑器 Tab 标签栏在窄屏下的显示布局，支持横向滚动；修复了不同主题下编辑器容器背景色不一致的问题。/ Fixed character escaping issues (e.g., regex `\b`) in the frequency words edit modal; optimized the editor tab bar layout for narrow screens with horizontal scroll support; fixed inconsistent editor container background colors across different themes.
+- **2026-05-11 19:00:** 修复模型查询功能的多个关键问题：解决容器工作目录导致的代码版本不一致问题；增强后端模型提取逻辑，支持多种API格式（data/models/result/items）和ID字段（id/model/name/model_id）；实现自动重试/v1路径功能；优化前端模态框交互（步骤2立即显示、禁止背景点击关闭、增大尺寸范围）；完善错误处理，避免"Expecting value"错误。/ Fixed multiple critical issues in model query feature: resolved code version inconsistency caused by container working directory; enhanced backend model extraction to support multiple API formats (data/models/result/items) and ID fields (id/model/name/model_id); implemented auto-retry for /v1 path; optimized frontend modal interaction (step2 immediate display, disabled background click to close, increased size range); improved error handling to avoid "Expecting value" errors.
 
 ### 1.3 技术栈信息 / Tech Stack
 - **前端核心 (Frontend Core):** HTML5, Vanilla CSS3, Vanilla JavaScript (ES6+)
@@ -31,6 +33,26 @@ This document details the integration design, implementation logic, file paths, 
 - **开发平台 (Dev Platform):** Linux (Ubuntu/Debian recommended)
 - **部署平台 (Deployment):** Docker Container (`wantcat/trendradar:latest`)
 - **构建工具 (Build):** Docker Volume Mounting & In-container Patching
+- **容器名称 (Container Name):** `aiyxdata_tradar`
+- **端口映射 (Port Mapping):** `127.0.0.1:8084:8080` (宿主机 8084 → 容器 8080)
+
+### 1.5 Docker 容器配置 / Docker Container Configuration
+- **配置文件路径 (Config File):** `/TrendRadar/docker-compose.yml`
+- **服务名称 (Service Name):** `aiyxdata_tradar`
+- **容器名称 (Container Name):** `aiyxdata_tradar`
+- **端口映射 (Port Mapping):** `127.0.0.1:8084:8080`
+  - 宿主机访问地址：`http://127.0.0.1:8084`
+  - 容器内部端口：`8080`
+  - 绑定到本地回环地址，仅本机可访问
+- **Volume 挂载 (Volume Mounts):**
+  - `./data:/app/data` - 数据目录（爬取结果、数据库等）
+  - `./config:/app/config` - 配置目录（config.yaml 等）
+- **环境变量 (Environment):** `PYTHONUNBUFFERED=1` (禁用 Python 输出缓冲)
+- **重启策略 (Restart Policy):** `unless-stopped` (除非手动停止，否则自动重启)
+- **注意事项 (Notes):**
+  - `server.py` 文件修改后需要通过 `docker cp` 手动复制到容器内 `/app/docker/server.py`
+  - 容器工作目录为 `/app/docker`，启动命令为 `python3 server.py`
+  - 修改代码后需要重启容器：`docker restart aiyxdata_tradar`
 
 ---
 
@@ -130,7 +152,7 @@ server {
 **3. 反向代理配置 (Reverse Proxy Configuration) - 关键部分**
 ```nginx
 location / {
-    proxy_pass http://127.0.0.1:8080;  # ⚠️ 必须与 Flask 服务器端口一致
+    proxy_pass http://127.0.0.1:8084;  # ⚠️ 必须与 docker-compose 端口映射一致（宿主机端口）
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -153,11 +175,18 @@ location / {
 }
 ```
 
+**说明 / Notes:**
+- **端口映射关系**: Docker 容器通过 `docker-compose.yml` 配置 `127.0.0.1:8084:8080`
+  - 容器内部：Flask 服务器监听 `8080` 端口
+  - 宿主机映射：`127.0.0.1:8084` 映射到容器的 `8080` 端口
+  - Nginx 代理：必须指向宿主机的 `8084` 端口（`proxy_pass http://127.0.0.1:8084`）
+- **为什么不能直接访问容器端口**: 容器端口 `8080` 只在容器内部可访问，宿主机必须通过端口映射访问
+
 #### 关键配置项说明 / Key Configuration Items
 
 | 配置项 / Item | 值 / Value | 说明 / Description |
 | :--- | :--- | :--- |
-| `proxy_pass` | `http://127.0.0.1:8080` | **必须与 Flask 服务器监听端口一致** / Must match Flask server listening port |
+| `proxy_pass` | `http://127.0.0.1:8084` | **必须与 docker-compose 端口映射一致**（宿主机端口 8084 → 容器端口 8080） / Must match docker-compose port mapping (host 8084 → container 8080) |
 | `proxy_connect_timeout` | `300s` | 连接超时时间，适合长时间数据处理 / Connection timeout for long-running operations |
 | `proxy_send_timeout` | `300s` | 发送超时时间 / Send timeout |
 | `proxy_read_timeout` | `300s` | 读取超时时间 / Read timeout |
@@ -167,20 +196,21 @@ location / {
 #### 常见问题与排查 / Troubleshooting
 
 **问题 1: 502 Bad Gateway 错误**
-- **原因:** `proxy_pass` 指向的端口与实际 Flask 服务器端口不匹配
+- **原因:** `proxy_pass` 指向的端口与实际 docker-compose 端口映射不匹配
 - **排查步骤:**
-  1. 检查 Flask 服务器监听端口: `ss -tlnp | grep python`
-  2. 检查 Nginx 配置中的 `proxy_pass` 端口
-  3. 确保两者一致
-- **修复:** 更新 `proxy_pass` 为正确的端口，然后执行 `nginx -s reload`
+  1. 检查 docker-compose 端口映射: `docker ps | grep aiyxdata_tradar` 或查看 `docker-compose.yml`
+  2. 检查宿主机端口监听: `ss -tlnp | grep 8084`
+  3. 检查 Nginx 配置中的 `proxy_pass` 端口
+  4. 确保 Nginx 代理到宿主机映射端口（8084），而非容器内部端口（8080）
+- **修复:** 更新 `proxy_pass` 为 `http://127.0.0.1:8084`，然后执行 `nginx -s reload`
 
 **问题 2: 连接超时**
 - **原因:** Flask 服务器响应缓慢或未启动
 - **排查步骤:**
-  1. 检查 Flask 服务器是否运行: `ps aux | grep "python.*server.py"`
-  2. 检查 Flask 服务器日志: `docker logs trendradar` 或查看日志文件
-  3. 检查网络连接: `curl http://127.0.0.1:8080/api/search?kw=test`
-- **修复:** 启动 Flask 服务器或增加超时时间
+  1. 检查容器是否运行: `docker ps | grep aiyxdata_tradar`
+  2. 检查容器日志: `docker logs aiyxdata_tradar` 或 `docker logs -f aiyxdata_tradar`
+  3. 检查网络连接: `curl http://127.0.0.1:8084/api/search?kw=test`
+- **修复:** 启动容器 `docker-compose up -d aiyxdata_tradar` 或增加超时时间
 
 **问题 3: SSL 证书错误**
 - **原因:** 证书文件不存在或路径错误
@@ -789,20 +819,33 @@ function openModelQueryModal() {
 **步骤 2: 测试连接 (Test Connection)**
 ```javascript
 async function testAIConnection() {
-  const provider = document.getElementById('provider-select').value;
-  const apiKey = document.getElementById('api-key-input').value;
+  const apiBaseInput = document.querySelector('input[data-path="api_base"]');
+  const apiKeyInput = document.querySelector('input[data-path="api_key"]');
+  const modelInput = document.querySelector('input[data-path="model"]');
+  
+  const apiBase = apiBaseInput ? apiBaseInput.value : '';
+  const apiKey = apiKeyInput ? apiKeyInput.value : '';
+  const model = modelInput ? modelInput.value : '';
   
   // 调用后端 API 测试连接
-  const response = await fetch('/api/test-ai-connection', {
+  const response = await fetch('/api/check_ai_connection', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider, apiKey })
+    body: JSON.stringify({
+      api_base: apiBase,
+      api_key: apiKey,
+      model: model || 'test'
+    })
   });
   
   // 显示测试结果
   const result = await response.json();
   if (result.success) {
     showNotification('✅ 连接成功', 'success');
+    // 立即显示步骤2（搜索框和模型列表区域）
+    document.getElementById('step2-models').style.display = 'block';
+    // 加载模型列表
+    setTimeout(() => fetchAvailableModels(apiBase, apiKey), 500);
   } else {
     showNotification('❌ 连接失败: ' + result.error, 'error');
   }
@@ -811,60 +854,64 @@ async function testAIConnection() {
 
 **步骤 3: 获取模型列表 (Fetch Model List)**
 ```javascript
-async function fetchAvailableModels() {
-  const provider = document.getElementById('provider-select').value;
-  const apiKey = document.getElementById('api-key-input').value;
+async function fetchAvailableModels(apiBase, apiKey) {
+  const modelListDiv = document.getElementById('modelList');
+  modelListDiv.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>加载模型列表中...</div>';
   
   // 调用后端 API 获取模型列表
-  const response = await fetch('/api/get-available-models', {
+  const response = await fetch('/api/get_ai_models', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider, apiKey })
+    body: JSON.stringify({
+      api_base: apiBase,
+      api_key: apiKey
+    })
   });
   
   const result = await response.json();
   
-  // 填充模型选择下拉框
-  const modelSelect = document.getElementById('model-select');
-  modelSelect.innerHTML = '';
-  result.models.forEach(model => {
-    const option = document.createElement('option');
-    option.value = model;
-    option.textContent = model;
-    modelSelect.appendChild(option);
-  });
+  if (result.success && result.models && result.models.length > 0) {
+    // 渲染模型列表
+    const modelsHtml = result.models.map(model => `
+      <button type="button" onclick="selectModel('${model}')" 
+              class="p-3 border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-500 text-left text-xs transition-colors">
+        <div class="font-medium text-gray-800">${model}</div>
+        <div class="text-gray-500 text-xs mt-1">点击选择</div>
+      </button>
+    `).join('');
+    modelListDiv.innerHTML = modelsHtml;
+  } else {
+    modelListDiv.innerHTML = `<div class="col-span-2 text-center text-red-600 py-4">
+      <i class="fa-solid fa-exclamation-circle mr-2"></i>获取模型列表失败<br>
+      <span class="text-xs text-gray-500">${result.error || '未知错误'}</span>
+    </div>`;
+  }
 }
 ```
 
-**步骤 4: 应用配置 (Apply Configuration)**
+**步骤 4: 选择模型并应用 (Select Model and Apply)**
 ```javascript
-function applyModelConfig() {
-  const provider = document.getElementById('provider-select').value;
-  const selectedModel = document.getElementById('model-select').value;
-  const apiKey = document.getElementById('api-key-input').value;
-  
-  // 根据规则映射获取配置参数
-  const rules = modelConfigRules[provider];
-  
-  // 更新配置对象
-  config.ai_model = {
-    provider: provider,
-    model: selectedModel,
-    api_key: apiKey,
-    base_url: rules.baseUrl,
-    temperature: rules.defaultTemperature,
-    max_tokens: rules.defaultMaxTokens
-  };
-  
-  // 更新配置面板显示
-  updateConfigPanel();
-  
-  // 关闭模态框
-  closeModelQueryModal();
-  
-  showNotification('✅ 配置已应用', 'success');
+function selectModel(modelName) {
+  const modelInput = document.querySelector('input[data-path="model"]');
+  if (modelInput) {
+    modelInput.value = modelName;
+    modelInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // 应用模型配置规则
+    applyModelConfig(modelName);
+    
+    // 关闭模态框
+    closeModelQueryModal();
+    showToast(`已选择模型: ${modelName}`, 'success');
+  }
 }
 ```
+
+**说明 / Notes:**
+- 用户点击模型卡片后直接应用到配置，无需额外的"应用配置"按钮
+- `applyModelConfig()` 函数会根据模型名称自动应用预设的配置参数（temperature、max_tokens 等）
+- 配置立即生效并关闭模态框
+
 
 #### 模态框 UI 结构 / Modal UI Structure
 
@@ -922,19 +969,24 @@ function applyModelConfig() {
 #### 后端 API 端点 / Backend API Endpoints
 
 **1. 测试连接 (Test Connection)**
-- **端点:** `POST /api/test-ai-connection`
-- **请求体:** `{ provider: string, apiKey: string }`
+- **端点:** `POST /api/check_ai_connection`
+- **请求体:** `{ api_base: string, api_key: string, model: string }`
 - **响应:** `{ success: boolean, error?: string }`
+- **说明:** 测试 API 连接是否有效，验证 API Key 和 Base URL 的可用性
 
 **2. 获取模型列表 (Get Available Models)**
-- **端点:** `POST /api/get-available-models`
-- **请求体:** `{ provider: string, apiKey: string }`
-- **响应:** `{ models: string[], error?: string }`
+- **端点:** `POST /api/get_ai_models`
+- **请求体:** `{ api_base: string, api_key: string }`
+- **响应:** `{ success: boolean, models?: string[], error?: string }`
+- **说明:** 
+  - 支持多种 API 响应格式（data/models/result/items）
+  - 支持多种 ID 字段（id/model/name/model_id）
+  - 自动重试 `/v1/models` 路径（当 `/models` 返回 404 或非 JSON 时）
+  - 返回按字母排序的模型列表
 
-**3. 应用配置 (Apply Configuration)**
-- **端点:** `POST /api/apply-model-config`
-- **请求体:** `{ provider: string, model: string, apiKey: string }`
-- **响应:** `{ success: boolean, config: object }`
+**3. 模型选择应用 (Model Selection)**
+- **实现方式:** 前端直接操作，无需额外 API 端点
+- **流程:** 用户点击模型卡片 → 更新配置面板 → 应用预设规则 → 关闭模态框
 
 #### 模型查询弹出框优化 / Model Query Modal Enhancements
 
@@ -942,26 +994,29 @@ function applyModelConfig() {
 1. **搜索过滤功能 (Search Filtering)**: 在模型列表上方添加搜索框，支持实时过滤模型名称。
 2. **可调整大小 (Resizable)**: 弹出框支持通过右下角拖拽调整大小。
 3. **增强拖拽区域 (Enhanced Drag Area)**: 扩大右下角拖拽区域的可视范围，提升用户体验。
+4. **步骤2立即显示 (Step2 Immediate Display)**: 连接测试成功后立即显示搜索框和模型列表区域，无论模型列表是否加载成功。
+5. **禁止背景点击关闭 (Disable Background Click)**: 只能通过关闭按钮关闭模态框，点击背景不会关闭。
+6. **增大尺寸范围 (Increased Size Range)**: 模态框最小尺寸从 400x300 增加到 500x400，最大尺寸为 90vw x 90vh。
 
 **实现细节 / Implementation Details**
 
 **1. 搜索框实现 (Search Box Implementation)**
 - **位置:** 模型列表上方，"步骤2:选择模型"标题下方
-- **HTML 结构** (`/TrendRadar/output/config_editor/assets/script.js` 第 6377-6388 行):
+- **HTML 结构** (`/TrendRadar/output/config_editor/assets/script.js` 第 6603-6605 行):
   ```html
-  <div class="mb-4">
+  <div class="mb-3">
       <input type="text" id="modelSearchInput" 
              placeholder="🔍 搜索模型..." 
-             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+             class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
              oninput="filterModels()">
   </div>
   ```
-- **过滤逻辑** (第 6540-6555 行):
+- **过滤逻辑** (script.js 中的 `filterModels()` 函数):
   ```javascript
   window.filterModels = function() {
       const searchInput = document.getElementById('modelSearchInput');
       const searchTerm = searchInput.value.toLowerCase();
-      const modelButtons = document.querySelectorAll('#model-list button');
+      const modelButtons = document.querySelectorAll('#modelList button');
       
       modelButtons.forEach(button => {
           const modelName = button.querySelector('.font-medium').textContent.toLowerCase();
@@ -976,21 +1031,23 @@ function applyModelConfig() {
 - **特性:** 实时搜索，不区分大小写，支持模糊匹配
 
 **2. 可调整大小实现 (Resizable Implementation)**
-- **CSS 属性** (`/TrendRadar/output/config_editor/assets/script.js` 第 6371 行):
+- **CSS 属性** (`/TrendRadar/output/config_editor/assets/script.js` 第 6579 行):
   ```html
-  <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto" 
-       style="resize: both; overflow: auto; min-width: 400px; min-height: 300px;">
+  <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto" 
+       style="resize: both; overflow: auto; min-width: 500px; min-height: 400px; max-width: 90vw; max-height: 90vh;">
   ```
 - **约束参数:**
   - `resize: both` - 允许水平和垂直方向调整
-  - `min-width: 400px` - 最小宽度限制
-  - `min-height: 300px` - 最小高度限制
+  - `min-width: 500px` - 最小宽度限制（从 400px 增加）
+  - `min-height: 400px` - 最小高度限制（从 300px 增加）
+  - `max-width: 90vw` - 最大宽度为视口的 90%
+  - `max-height: 90vh` - 最大高度为视口的 90%
   - `overflow: auto` - 内容溢出时显示滚动条
 
 **3. 拖拽区域可视化 (Drag Area Visualization)**
-- **CSS 样式** (`/TrendRadar/output/config_editor/assets/style.css` 第 1224+ 行):
+- **CSS 样式** (`/TrendRadar/output/config_editor/assets/style.css` 第 1244-1260 行):
   ```css
-  /* 模型查询弹出框拖拽区域增强 */
+  /* 模态框可调整大小增强 */
   #modelQueryModal .bg-white {
       position: relative;
   }
@@ -1002,25 +1059,208 @@ function applyModelConfig() {
       bottom: 0;
       width: 40px;
       height: 40px;
-      background: linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.2) 50%);
       cursor: nwse-resize;
-      pointer-events: none;
+      background: linear-gradient(135deg, transparent 50%, rgba(156, 163, 175, 0.3) 50%);
+      border-bottom-right-radius: 0.5rem;
   }
   
   #modelQueryModal .bg-white:hover::after {
-      background: linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.4) 50%);
+      background: linear-gradient(135deg, transparent 50%, rgba(156, 163, 175, 0.5) 50%);
   }
   ```
 - **设计说明:**
   - 使用 `::after` 伪元素创建 40px × 40px 的可视拖拽区域
-  - 渐变背景提示用户可拖拽位置
-  - hover 效果增强交互反馈
-  - `pointer-events: none` 确保不干扰原生 resize 功能
+  - 灰色渐变背景（rgba(156, 163, 175)）提示用户可拖拽位置
+  - hover 效果增强交互反馈（透明度从 0.3 增加到 0.5）
+  - `cursor: nwse-resize` 显示调整大小光标
+  - `border-bottom-right-radius` 保持圆角一致性
+
+**4. 步骤2立即显示实现 (Step2 Immediate Display Implementation)**
+- **前端逻辑** (`/TrendRadar/output/config_editor/assets/script.js` 第 6678-6686 行):
+  ```javascript
+  .then(data => {
+      if (data.success) {
+          statusDiv.innerHTML = '<div class="text-green-600"><i class="fa-solid fa-check-circle mr-2"></i>连接成功！</div>';
+          // 立即显示步骤2（搜索框和模型列表区域）
+          document.getElementById('step2-models').style.display = 'block';
+          // 加载模型列表
+          setTimeout(() => fetchAvailableModels(apiBase, apiKey), 500);
+      } else {
+          statusDiv.innerHTML = `<div class="text-red-600"><i class="fa-solid fa-exclamation-circle mr-2"></i>连接失败: ${data.error || '未知错误'}</div>`;
+      }
+  })
+  ```
+- **说明:** 连接测试成功后立即显示步骤2区域（第 6681 行），不再等待模型列表加载成功
+
+**5. 禁止背景点击关闭实现 (Disable Background Click Implementation)**
+- **前端逻辑** (`/TrendRadar/output/config_editor/assets/script.js` 第 6640-6641 行):
+  ```javascript
+  // 禁止点击背景关闭弹窗（用户要求只能通过关闭按钮关闭）
+  };
+  ```
+- **说明:** 移除了背景点击关闭的事件监听器，只能通过标题栏的关闭按钮（×）或底部的"关闭"按钮关闭模态框
+
+**6. 模型列表高度调整 (Model List Height Adjustment)**
+- **CSS 属性** (`/TrendRadar/output/config_editor/assets/script.js` 第 6606 行):
+  ```html
+  <div id="modelList" class="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+  ```
+- **说明:** 从 `max-h-48` (192px) 增加到 `max-h-96` (384px)，可显示约6个模型，超过部分可滚动
 
 **用户体验改进 / UX Improvements**
 1. **搜索效率:** 当模型列表较长时（如 SiliconFlow 提供 50+ 模型），搜索框可快速定位目标模型。
 2. **灵活布局:** 用户可根据屏幕尺寸和个人偏好调整弹出框大小，适应不同的工作场景。
 3. **视觉引导:** 右下角的渐变三角形清晰提示拖拽位置，降低操作门槛。
+4. **即时反馈:** 连接成功后立即显示搜索框，用户无需等待模型列表加载即可看到界面变化。
+5. **防误操作:** 禁止背景点击关闭，避免用户误触导致配置丢失。
+6. **更大空间:** 增大的尺寸范围提供更好的内容展示和操作空间。
+
+#### 3.3.11 模型查询功能后端优化 / Model Query Backend Optimization
+
+**功能概述 / Feature Overview**
+优化后端 `/api/get_ai_models` 接口，支持多种 API 提供商的模型列表获取，增强容错性和兼容性。
+
+**核心改进 / Core Improvements**
+
+**1. 多格式模型提取支持 (Multi-format Model Extraction)**
+- **文件位置:** `/TrendRadar/docker/server.py` 第 605-710 行
+- **支持的容器字段:** `data`, `models`, `result`, `items`
+- **支持的ID字段:** `id`, `model`, `name`, `model_id`
+- **实现逻辑:**
+  ```python
+  # 支持多种容器字段名
+  data_list = data.get('data') or data.get('models') or data.get('result') or data.get('items')
+  
+  if data_list and isinstance(data_list, list):
+      for m in data_list:
+          if isinstance(m, dict):
+              # 支持多种ID字段名
+              model_id = m.get('id') or m.get('model') or m.get('name') or m.get('model_id')
+              if model_id:
+                  models.append(model_id)
+  ```
+
+**2. 自动重试 /v1 路径 (Auto-retry /v1 Path)**
+- **问题:** 某些 API 提供商的 `/models` 端点返回 HTML 而非 JSON
+- **解决方案:** 当 `/models` 返回 404 或非 JSON 时，自动尝试 `/v1/models`
+- **实现逻辑:**
+  ```python
+  if (response.status_code == 404 or not is_valid_json) and not base_url.endswith('/v1'):
+      v1_url = f"{base_url}/v1/models"
+      print(f"[DEBUG] 尝试 /v1 路径: {v1_url}", file=sys.stderr, flush=True)
+      v1_response = requests.get(v1_url, headers=headers, timeout=10)
+      v1_data = v1_response.json()
+      response = v1_response
+      data = v1_data
+      is_valid_json = True
+      print(f"[DEBUG] v1请求完成: status={v1_response.status_code}", file=sys.stderr, flush=True)
+  ```
+
+**3. 改进的错误处理 (Improved Error Handling)**
+- **避免双重 JSON 解析:** 检查 `is_valid_json` 标志，避免对非 JSON 响应调用 `.json()`
+- **详细错误信息提取:** 从响应中提取 `message` 或 `code` 字段
+- **实现逻辑:**
+  ```python
+  if is_valid_json:
+      # 使用已解析的 data 变量
+      err_msg = data.get('message') or data.get('code') or str(data)
+  else:
+      # 使用 response.text 而不是再次调用 json()
+      err_msg = response.text[:200]
+  
+  return self.send_json_response(200, {
+      "success": False,
+      "error": f"API 返回错误 ({response.status_code}): {err_msg}"
+  })
+  ```
+
+**4. 完整的调试日志 (Comprehensive Debug Logging)**
+- **日志输出:** 使用 `sys.stderr` 输出调试信息，便于容器日志追踪
+- **查看方法 (View Methods):**
+  - 实时查看：`docker logs -f aiyxdata_tradar`
+  - 查看最近日志：`docker logs --tail 100 aiyxdata_tradar`
+  - 查看带时间戳：`docker logs -t aiyxdata_tradar`
+- **关键节点:**
+  - 请求开始：API Base 和 API Key（脱敏）
+  - 第一次请求：URL 和状态码
+  - JSON 解析：成功或失败
+  - /v1 重试：触发条件和结果
+  - 模型提取：提取到的模型数量和列表
+  - 错误处理：错误来源和最终信息
+- **示例输出:**
+  ```
+  [DEBUG] 开始处理 get_ai_models 请求
+  [DEBUG] api_base=https://api.siliconflow.cn/v1, api_key=***
+  [DEBUG] check_url=https://api.siliconflow.cn/v1/models
+  [DEBUG] 第一次请求完成: status=401
+  [DEBUG] JSON解析成功
+  [DEBUG] 进入错误处理分支: status=401, is_valid_json=True
+  [DEBUG] 使用data提取错误: data={'error': {'message': 'Api key is invalid'}}
+  [DEBUG] 提取的错误信息: Api key is invalid
+  [DEBUG] 最终错误信息: Api key is invalid
+  ```
+- **成功示例输出:**
+  ```
+  [DEBUG] 开始处理 get_ai_models 请求
+  [DEBUG] api_base=https://api.siliconflow.cn/v1, api_key=***
+  [DEBUG] check_url=https://api.siliconflow.cn/v1/models
+  [DEBUG] 第一次请求完成: status=200
+  [DEBUG] JSON解析成功
+  [DEBUG] 进入成功分支
+  [API] 原始响应类型: <class 'dict'>
+  [API] 提取到的data_list: <class 'list'>, 长度: 52
+  [API] 添加模型: Qwen/Qwen2.5-7B-Instruct
+  [API] 添加模型: deepseek-ai/DeepSeek-V2.5
+  ...
+  [API] 最终提取到的模型数: 52, 模型列表: ['model1', 'model2', ...]
+  ```
+
+**兼容的 API 提供商 / Compatible API Providers**
+- **SiliconFlow:** `https://api.siliconflow.cn/v1` - 返回 `data` 数组，ID 字段为 `id`
+- **OpenAI:** `https://api.openai.com/v1` - 返回 `data` 数组，ID 字段为 `id`
+- **DeepSeek:** `https://api.deepseek.com/v1` - 返回 `data` 数组，ID 字段为 `id`
+- **自定义提供商:** 支持任何符合 OpenAI 格式或类似格式的 API
+
+**错误处理示例 / Error Handling Examples**
+1. **401 认证失败:** `API 返回错误 (401): Api key is invalid`
+2. **404 端点不存在:** 自动重试 `/v1/models`
+3. **非 JSON 响应:** 自动重试 `/v1/models`，如仍失败则返回 `Expecting value: line 1 column 1 (char 0)`
+4. **网络超时:** `连接超时或网络错误`
+5. **空模型列表:** `连接成功但未获取到模型列表`
+
+#### 3.3.9 界面细节优化与错误修复 / UI Detail Optimization & Bug Fixes
+
+**1. 字符转义优化 (Character Escaping Optimization)**
+- **问题 (Problem):** 当关键词包含正则字符（如 `\b`）或引号时，直接插入 HTML 属性会导致转义丢失，表现为模态框中出现退格符乱码或 HTML 结构崩溃。/ When keywords contain regex characters (e.g., `\b`) or quotes, inserting them directly into HTML attributes caused loss of escaping, resulting in garbled characters or broken HTML.
+- **实现细节 (Implementation):**
+  - 新增 `escAttr()` 辅助函数，对反斜杠 `\`、单引号 `'`、双引号 `"` 和换行符进行多重转义。/ Added `escAttr()` helper to escape backslashes, quotes, and newlines.
+  - 在 `renderGroupCard` 和 `renderFrequencyPanel` 中统一调用。/ Unified calling in rendering functions.
+- **代码参考 (Code Reference):** `/TrendRadar/output/config_editor/assets/script.js` 第 1800+ 行。
+
+**2. 标签栏自适应优化 (Tab Bar Responsive Optimization)**
+- **问题 (Problem):** 文件标签（config.yaml 等）过多时，在窄屏下会发生挤压或折行，导致界面错位。/ Too many file tabs caused squishing or wrapping on narrow screens, breaking the layout.
+- **实现细节 (Implementation):**
+  - 容器级：增加 `overflow-x-auto` 和 `no-scrollbar` 支持横向滚动。/ Container: Added `overflow-x-auto` and `no-scrollbar` for horizontal scroll.
+  - 元素级：增加 `whitespace-nowrap` 和 `flex-shrink-0` 保证标签宽度固定不收缩。/ Element: Added `whitespace-nowrap` and `flex-shrink-0` to keep tabs fixed and unshrinkable.
+- **代码参考 (Code Reference):** `/TrendRadar/output/config_editor/index.html` 第 72 行。
+
+**3. 编辑器背景主题一致性 (Editor Background Theme Consistency)**
+- **问题 (Problem):** 编辑器外层容器硬编码了 `#1e1e1e` 背景，导致在切换“北欧蓝 (Nord)”或“德古拉 (Dracula)”等彩色背景主题时，空文本区域颜色与高亮层背景色（`var(--bg-editor)`）不一致。/ Hardcoded `#1e1e1e` background on containers caused inconsistency with the highlight layer's theme-based color (`var(--bg-editor)`) in themes like Nord or Dracula.
+- **实现细节 (Implementation):**
+  - 移除 `index.html` 中所有编辑器的硬编码 `bg-[#1e1e1e]` 类。/ Removed all hardcoded `bg-[#1e1e1e]` classes from `index.html`.
+  - 在 `style.css` 的 `.highlight-editor-wrap` 类中统一使用 `background: var(--bg-editor);`。/ Unified using `background: var(--bg-editor);` in `.highlight-editor-wrap` in `style.css`.
+- **效果 (Effect):** 编辑器背景色现在能够随主题切换实时、全域更新。/ Editor background now updates globally and in real-time with theme switching.
+
+#### 3.3.10 可扩展编辑模态框 (Expandable Edit Modal)
+
+- **功能概述 (Feature Overview):** 引入了统一的全屏/半透明覆盖编辑模态框，用于处理组名、关键词、别名和全局过滤词的编辑，解决了窄输入框难以编辑长内容的痛点。/ Introduced a unified full-screen/translucent overlay edit modal for group names, keywords, aliases, and global filters, solving the pain point of editing long content in narrow inputs.
+- **交互特性 (Interaction Features):**
+  - **视觉效果:** 采用弹簧动画 (Spring Animation) 弹出和背景模糊 (Backdrop Blur) 效果，提升高级感。/ Visuals: Uses spring animation for entry and backdrop blur for a premium feel.
+  - **便捷操作:** 自动获取焦点，支持 `Ctrl + Enter` 快捷保存，点击遮罩层或按 `Esc` 键自动取消。/ Convenience: Auto-focuses, supports `Ctrl + Enter` for quick save, and closes via backdrop click or `Esc`.
+- **实现逻辑 (Implementation Logic):**
+  - **动态创建:** `window.openExpandableEditModal(title, value, callback)` 会在调用时动态生成 DOM 结构并插入 Body。/ Dynamic Creation: `window.openExpandableEditModal` dynamically generates and injects DOM into Body upon call.
+  - **生命周期:** 包含挂载、动画启动、输入监听、点击销毁等完整生命周期管理。/ Lifecycle: Managed from mounting and animation to input listening and destruction.
+- **代码位置 (Code Reference):** `/TrendRadar/output/config_editor/assets/script.js`。
 
 ---
 
