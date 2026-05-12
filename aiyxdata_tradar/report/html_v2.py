@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Callable
 from aiyxdata_tradar.report.helpers import html_escape
 from aiyxdata_tradar.utils.time import convert_time_for_display
+from aiyxdata_tradar.ai.formatter import _format_list_content
 
 def render_html_content_v2(
     report_data: Dict,
@@ -816,18 +817,23 @@ def render_html_content_v2(
     ai_html = ""
     if ai_analysis:
         if ai_analysis.success:
-            # 整合多个 AI 分析维度
+            # 整合多个 AI 分析维度，应用格式化处理（支持【标签】分段）
             ai_sections = []
             if ai_analysis.core_trends:
-                ai_sections.append(f"### 🔥 核心热点与态势\n{ai_analysis.core_trends}")
+                formatted_content = _format_list_content(ai_analysis.core_trends)
+                ai_sections.append(f"### 🔥 核心热点与态势\n{formatted_content}")
             if ai_analysis.sentiment_controversy:
-                ai_sections.append(f"### 🎭 舆情风向与争议\n{ai_analysis.sentiment_controversy}")
+                formatted_content = _format_list_content(ai_analysis.sentiment_controversy)
+                ai_sections.append(f"### 🎭 舆情风向与争议\n{formatted_content}")
             if ai_analysis.signals:
-                ai_sections.append(f"### 📡 异动与弱信号\n{ai_analysis.signals}")
+                formatted_content = _format_list_content(ai_analysis.signals)
+                ai_sections.append(f"### 📡 异动与弱信号\n{formatted_content}")
             if ai_analysis.rss_insights:
-                ai_sections.append(f"### 🗞️ RSS 深度洞察\n{ai_analysis.rss_insights}")
+                formatted_content = _format_list_content(ai_analysis.rss_insights)
+                ai_sections.append(f"### 🗞️ RSS 深度洞察\n{formatted_content}")
             if ai_analysis.outlook_strategy:
-                ai_sections.append(f"### 🎯 研判与策略建议\n{ai_analysis.outlook_strategy}")
+                formatted_content = _format_list_content(ai_analysis.outlook_strategy)
+                ai_sections.append(f"### 🎯 研判与策略建议\n{formatted_content}")
 
             full_ai_content = "\n\n".join(ai_sections)
 
