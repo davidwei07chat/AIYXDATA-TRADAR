@@ -158,6 +158,8 @@ def generate_html_report(
     render_html_func: Optional[Callable] = None,
     matches_word_groups_func: Optional[Callable] = None,
     load_frequency_words_func: Optional[Callable] = None,
+    ai_analysis: Optional[object] = None,
+    standalone_data: Optional[Dict] = None,
 ) -> str:
     """
     生成 HTML 报告
@@ -182,6 +184,8 @@ def generate_html_report(
         render_html_func: HTML 渲染函数
         matches_word_groups_func: 词组匹配函数
         load_frequency_words_func: 加载频率词函数
+        ai_analysis: AI 分析结果
+        standalone_data: 独立展示区数据
 
     Returns:
         str: 生成的 HTML 文件路径（时间戳快照路径）
@@ -209,7 +213,7 @@ def generate_html_report(
     # 渲染 HTML 内容
     if render_html_func:
         html_content = render_html_func(
-            report_data, total_titles, mode, update_info
+            report_data, total_titles, mode, update_info, ai_analysis=ai_analysis, standalone_data=standalone_data
         )
     else:
         # 默认简单 HTML

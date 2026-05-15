@@ -313,9 +313,20 @@ class AppContext:
             output_dir="output",
             date_folder=self.format_date(),
             time_filename=self.format_time(),
-            render_html_func=lambda *args, **kwargs: self.render_html(*args, rss_items=rss_items, rss_new_items=rss_new_items, ai_analysis=ai_analysis, standalone_data=standalone_data, **kwargs),
+            render_html_func=lambda report_data, total_titles, mode, update_info, **kwargs: self.render_html(
+                report_data=report_data,
+                total_titles=total_titles,
+                mode=mode,
+                update_info=update_info,
+                rss_items=rss_items,
+                rss_new_items=rss_new_items,
+                ai_analysis=ai_analysis,
+                standalone_data=standalone_data,
+            ),
             matches_word_groups_func=self.matches_word_groups,
             load_frequency_words_func=self.load_frequency_words,
+            ai_analysis=ai_analysis,
+            standalone_data=standalone_data,
         )
 
     def render_html(

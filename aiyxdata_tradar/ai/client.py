@@ -43,6 +43,7 @@ class AIClient:
         self.timeout = config.get("TIMEOUT", 120)
         self.num_retries = config.get("NUM_RETRIES", 2)
         self.fallback_models = config.get("FALLBACK_MODELS", [])
+        self.extra_params = config.get("EXTRA_PARAMS", {}) or {}
 
     def _auto_prefix_model(self, model: str) -> str:
         """
@@ -135,6 +136,10 @@ class AIClient:
         # 添加 fallback 模型（如果配置了）
         if self.fallback_models:
             params["fallbacks"] = self.fallback_models
+
+        # 添加配置中的额外参数（如 response_format/top_p 等）
+        if isinstance(self.extra_params, dict):
+            params.update(self.extra_params)
 
         # 合并其他额外参数
         for key, value in kwargs.items():

@@ -1120,6 +1120,18 @@ function updateYamlFromUI(modKey, path, el) {
         if (isNaN(newVal)) newVal = 0;
     }
 
+    // 如果是 AI 模型字段，自动添加 provider 前缀
+    if (modKey === 'ai' && path === 'model' && typeof newVal === 'string' && newVal.trim() !== '') {
+        const originalVal = newVal;
+        newVal = autoAddProviderPrefix(newVal);
+
+        // 如果添加了前缀，更新输入框显示并提示用户
+        if (newVal !== originalVal) {
+            el.value = newVal;
+            showToast(`已自动添加 provider 前缀: ${newVal}`, 'info');
+        }
+    }
+
     const editor = document.getElementById('yaml-editor');
     let yaml = editor.value;
     const lines = yaml.split('\n');
@@ -6544,7 +6556,82 @@ window.saveCurrentAsCustomPreset = function() {
 // AI 模型查询功能
 // ==========================================
 
-// 模型配置规则映射
+// 模型信息数据库 - 包含 provider 前缀和 max_tokens
+const MODEL_DATABASE = {
+    // Anthropic Claude 系列
+    'claude-opus-4-7': { provider: 'anthropic', max_tokens: 16384 },
+    'claude-opus-4-6': { provider: 'anthropic', max_tokens: 16384 },
+    'claude-opus-4-6-thinking': { provider: 'anthropic', max_tokens: 16384 },
+    'claude-sonnet-4-6': { provider: 'anthropic', max_tokens: 16384 },
+    'claude-sonnet-4': { provider: 'anthropic', max_tokens: 8192 },
+    'claude-3-5-sonnet-20241022': { provider: 'anthropic', max_tokens: 8192 },
+    'claude-3-5-haiku-20241022': { provider: 'anthropic', max_tokens: 8192 },
+    'claude-3-opus-20240229': { provider: 'anthropic', max_tokens: 4096 },
+    'claude-3-sonnet-20240229': { provider: 'anthropic', max_tokens: 4096 },
+    'claude-3-haiku-20240307': { provider: 'anthropic', max_tokens: 4096 },
+
+    // OpenAI GPT 系列
+    'gpt-4': { provider: 'openai', max_tokens: 8192 },
+    'gpt-4-turbo': { provider: 'openai', max_tokens: 4096 },
+    'gpt-4-turbo-preview': { provider: 'openai', max_tokens: 4096 },
+    'gpt-4-0125-preview': { provider: 'openai', max_tokens: 4096 },
+    'gpt-4-1106-preview': { provider: 'openai', max_tokens: 4096 },
+    'gpt-3.5-turbo': { provider: 'openai', max_tokens: 4096 },
+    'gpt-3.5-turbo-16k': { provider: 'openai', max_tokens: 16384 },
+    'o1-preview': { provider: 'openai', max_tokens: 32768 },
+    'o1-mini': { provider: 'openai', max_tokens: 65536 },
+
+    // DeepSeek 系列
+    'deepseek-chat': { provider: 'deepseek', max_tokens: 4096 },
+    'deepseek-v3': { provider: 'deepseek', max_tokens: 8192 },
+    'deepseek-coder': { provider: 'deepseek', max_tokens: 4096 },
+
+    // Google Gemini 系列
+    'gemini-pro': { provider: 'gemini', max_tokens: 8192 },
+    'gemini-1.5-pro': { provider: 'gemini', max_tokens: 8192 },
+    'gemini-1.5-flash': { provider: 'gemini', max_tokens: 8192 },
+    'gemini-ultra': { provider: 'gemini', max_tokens: 8192 },
+
+    // 智谱 GLM 系列
+    'glm-4': { provider: 'zhipu', max_tokens: 8192 },
+    'glm-4-plus': { provider: 'zhipu', max_tokens: 8192 },
+    'glm-4-flash': { provider: 'zhipu', max_tokens: 8192 },
+    'glm-3-turbo': { provider: 'zhipu', max_tokens: 8192 },
+
+    // 通义千问系列
+    'qwen-max': { provider: 'qwen', max_tokens: 8192 },
+    'qwen-plus': { provider: 'qwen', max_tokens: 8192 },
+    'qwen-turbo': { provider: 'qwen', max_tokens: 8192 },
+    'qwen-long': { provider: 'qwen', max_tokens: 30000 },
+
+    // 零一万物系列
+    'yi-large': { provider: 'yi', max_tokens: 16384 },
+    'yi-medium': { provider: 'yi', max_tokens: 16384 },
+    'yi-spark': { provider: 'yi', max_tokens: 16384 },
+
+    // Moonshot/Kimi 系列
+    'moonshot-v1-8k': { provider: 'moonshot', max_tokens: 8192 },
+    'moonshot-v1-32k': { provider: 'moonshot', max_tokens: 32768 },
+    'moonshot-v1-128k': { provider: 'moonshot', max_tokens: 128000 },
+    'kimi-k2.6': { provider: 'moonshot', max_tokens: 128000 },
+
+    // Meta Llama 系列
+    'llama-3-70b': { provider: 'meta', max_tokens: 8192 },
+    'llama-3-8b': { provider: 'meta', max_tokens: 8192 },
+    'llama-2-70b': { provider: 'meta', max_tokens: 4096 },
+
+    // Mistral 系列
+    'mistral-large': { provider: 'mistral', max_tokens: 32768 },
+    'mistral-medium': { provider: 'mistral', max_tokens: 32768 },
+    'mistral-small': { provider: 'mistral', max_tokens: 32768 },
+
+    // Cohere 系列
+    'command-r-plus': { provider: 'cohere', max_tokens: 4096 },
+    'command-r': { provider: 'cohere', max_tokens: 4096 },
+    'command': { provider: 'cohere', max_tokens: 4096 }
+};
+
+// 模型配置规则映射（保留向后兼容）
 const MODEL_CONFIG_RULES = {
     'deepseek-ai/deepseek-v3': {
         api_base: 'https://api.siliconflow.cn/v1',
@@ -6733,11 +6820,50 @@ window.fetchAvailableModels = function(apiBase, apiKey) {
     });
 };
 
+// 自动添加 Provider 前缀
+window.autoAddProviderPrefix = function(modelName) {
+    // 如果已经包含 /，直接返回
+    if (modelName.includes('/')) {
+        return modelName;
+    }
+
+    // Provider 前缀匹配规则
+    const providerRules = [
+        { pattern: /^claude-/i, provider: 'anthropic' },
+        { pattern: /^gpt-/i, provider: 'openai' },
+        { pattern: /^o1-/i, provider: 'openai' },
+        { pattern: /^text-/i, provider: 'openai' },
+        { pattern: /^deepseek-/i, provider: 'deepseek' },
+        { pattern: /^gemini-/i, provider: 'gemini' },
+        { pattern: /^glm-/i, provider: 'zhipu' },
+        { pattern: /^qwen-/i, provider: 'qwen' },
+        { pattern: /^yi-/i, provider: 'yi' },
+        { pattern: /^moonshot-/i, provider: 'moonshot' },
+        { pattern: /^kimi-/i, provider: 'moonshot' },
+        { pattern: /^llama-/i, provider: 'meta' },
+        { pattern: /^mistral-/i, provider: 'mistral' },
+        { pattern: /^command-/i, provider: 'cohere' }
+    ];
+
+    // 匹配规则
+    for (const rule of providerRules) {
+        if (rule.pattern.test(modelName)) {
+            return `${rule.provider}/${modelName}`;
+        }
+    }
+
+    // 如果没有匹配到规则，返回原始名称（LiteLLM 会自动添加 openai/ 前缀）
+    return modelName;
+};
+
 // 选择模型
 window.selectModel = function(modelName) {
     const modelInput = document.querySelector('input[data-path="model"]');
     if (modelInput) {
-        modelInput.value = modelName;
+        // 自动添加 Provider 前缀
+        const modelWithPrefix = autoAddProviderPrefix(modelName);
+
+        modelInput.value = modelWithPrefix;
         modelInput.dispatchEvent(new Event('change', { bubbles: true }));
 
         // 应用模型配置规则
@@ -6745,7 +6871,13 @@ window.selectModel = function(modelName) {
 
         // 关闭模态框
         closeModelQueryModal();
-        showToast(`已选择模型: ${modelName}`, 'success');
+
+        // 如果添加了前缀，提示用户
+        if (modelWithPrefix !== modelName) {
+            showToast(`已选择模型: ${modelWithPrefix} (自动添加 provider 前缀)`, 'success');
+        } else {
+            showToast(`已选择模型: ${modelName}`, 'success');
+        }
     }
 };
 

@@ -197,7 +197,7 @@ storage:
 # 8. AI 模型配置
 # ===============================================================
 ai:
-  model: "Pro/moonshotai/Kimi-K2.6"
+  model: "openai/Pro/moonshotai/Kimi-K2.6"
   api_base: "https://api.siliconflow.cn/v1"
   api_key: "sk-rgpqttlpjlxowrmcfwseqsckovdivaipzcihjlrctidilmvw"
   timeout: 600
@@ -205,6 +205,9 @@ ai:
   max_tokens: 10000
   num_retries: 1
   fallback_models: []
+  extra_params:
+    response_format:
+      type: "json_object"
 
 
 # ===============================================================

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Provider 前缀自动匹配测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        .test-case { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+        .input { color: #0066cc; font-weight: bold; }
+        .output { color: #009900; font-weight: bold; }
+        .match { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Provider 前缀自动匹配测试</h1>
+    <p>测试各种模型名称的自动前缀匹配规则：</p>
+    <div id="results"></div>
+
+    <script>
+        // 复制自 script.js 的函数
+        function autoAddProviderPrefix(modelName) {
+            if (modelName.includes('/')) {
+                return modelName;
+            }
+
+            const providerRules = [
+                { pattern: /^claude-/i, provider: 'anthropic' },
+                { pattern: /^gpt-/i, provider: 'openai' },
+                { pattern: /^o1-/i, provider: 'openai' },
+                { pattern: /^text-/i, provider: 'openai' },
+                { pattern: /^deepseek-/i, provider: 'deepseek' },
+                { pattern: /^gemini-/i, provider: 'gemini' },
+                { pattern: /^glm-/i, provider: 'zhipu' },
+                { pattern: /^qwen-/i, provider: 'qwen' },
+                { pattern: /^yi-/i, provider: 'yi' },
+                { pattern: /^moonshot-/i, provider: 'moonshot' },
+                { pattern: /^kimi-/i, provider: 'moonshot' },
+                { pattern: /^llama-/i, provider: 'meta' },
+                { pattern: /^mistral-/i, provider: 'mistral' },
+                { pattern: /^command-/i, provider: 'cohere' }
+            ];
+
+            for (const rule of providerRules) {
+                if (rule.pattern.test(modelName)) {
+                    return `${rule.provider}/${modelName}`;
+                }
+            }
+
+            return modelName;
+        }
+
+        // 测试用例
+        const testCases = [
+            'claude-opus-4-6-thinking',
+            'claude-sonnet-4-6',
+            'claude-3-5-haiku-20241022',
+            'gpt-4',
+            'gpt-3.5-turbo',
+            'o1-preview',
+            'deepseek-chat',
+            'deepseek-v3',
+            'gemini-pro',
+            'glm-4',
+            'qwen-max',
+            'yi-large',
+            'kimi-k2.6',
+            'moonshot-v1',
+            'llama-3-70b',
+            'mistral-large',
+            'command-r-plus',
+            'anthropic/claude-opus-4-7',
+            'openai/gpt-4',
+            'unknown-model'
+        ];
+
+        const resultsDiv = document.getElementById('results');
+        testCases.forEach(input => {
+            const output = autoAddProviderPrefix(input);
+            const changed = input !== output;
+            const matchInfo = changed ? '✅ 已添加前缀' : (input.includes('/') ? '✓ 已有前缀' : '⚠️ 无匹配规则');
+
+            resultsDiv.innerHTML += `
+                <div class="test-case">
+                    <div><span class="input">输入:</span> ${input}</div>
+                    <div><span class="output">输出:</span> ${output}</div>
+                    <div><span class="match">${matchInfo}</span></div>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

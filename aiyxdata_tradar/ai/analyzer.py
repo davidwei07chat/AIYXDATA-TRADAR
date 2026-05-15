@@ -83,8 +83,10 @@ class AIAnalyzer:
         self.language = analysis_config.get("LANGUAGE", "Chinese")
 
         # 加载提示词模板
+        self.prompt_template_error = ""
+        self.prompt_file = analysis_config.get("PROMPT_FILE", "ai_analysis_prompt.txt")
         self.system_prompt, self.user_prompt_template = self._load_prompt_template(
-            analysis_config.get("PROMPT_FILE", "ai_analysis_prompt.txt")
+            self.prompt_file
         )
 
     def _load_prompt_template(self, prompt_file: str) -> tuple:
@@ -93,7 +95,8 @@ class AIAnalyzer:
         prompt_path = config_dir / prompt_file
 
         if not prompt_path.exists():
-            print(f"[AI] 提示词文件不存在: {prompt_path}")
+            self.prompt_template_error = f"提示词文件不存在: {prompt_path}"
+            print(f"[AI] {self.prompt_template_error}")
             return "", ""
 
         content = prompt_path.read_text(encoding="utf-8")
@@ -102,19 +105,37 @@ class AIAnalyzer:
         system_prompt = ""
         user_prompt = ""
 
-        if "[system]" in content and "[user]" in content:
-            parts = content.split("[user]")
-            system_part = parts[0]
-            user_part = parts[1] if len(parts) > 1 else ""
-
-            # 提取 system 内容
+        if "[user]" in content:
+            system_part, user_part = content.split("[user]", 1)
             if "[system]" in system_part:
-                system_prompt = system_part.split("[system]")[1].strip()
-
+                system_prompt = system_part.split("[system]", 1)[1].strip()
             user_prompt = user_part.strip()
         else:
-            # 整个文件作为 user prompt
-            user_prompt = content
+            if "[system]" in content:
+                system_prompt = content.split("[system]", 1)[1].strip()
+                self.prompt_template_error = (
+                    f"提示词文件 {prompt_file} 缺少 [user] 段，"
+                    "已停止 AI 分析，避免把整份提示词配置当作待分析内容发送给模型"
+                )
+                print(f"[AI] {self.prompt_template_error}")
+            else:
+                # 兼容纯 user prompt 模板，但仍会在下方检查数据占位符。
+                user_prompt = content.strip()
+
+        if not self.prompt_template_error and not user_prompt.strip():
+            self.prompt_template_error = f"提示词文件 {prompt_file} 的 [user] 段为空"
+            print(f"[AI] {self.prompt_template_error}")
+
+        data_placeholders = ("{news_content}", "{rss_content}", "{standalone_content}")
+        if (
+            not self.prompt_template_error
+            and not any(placeholder in user_prompt for placeholder in data_placeholders)
+        ):
+            self.prompt_template_error = (
+                f"提示词文件 {prompt_file} 缺少新闻数据占位符 "
+                "{news_content}/{rss_content}/{standalone_content}"
+            )
+            print(f"[AI] {self.prompt_template_error}")
 
         return system_prompt, user_prompt
 
@@ -170,6 +191,9 @@ class AIAnalyzer:
                 success=False,
                 error="未配置 AI API Key，请在 config.yaml 或环境变量 AI_API_KEY 中设置"
             )
+
+        if self.prompt_template_error:
+            return AIAnalysisResult(success=False, error=self.prompt_template_error)
 
         # 准备新闻内容并获取统计数据
         news_content, rss_content, hotlist_total, rss_total, analyzed_count = self._prepare_news_content(stats, rss_stats)
@@ -386,7 +410,9 @@ class AIAnalyzer:
             messages.append({"role": "system", "content": self.system_prompt})
         messages.append({"role": "user", "content": user_prompt})
 
-        return self.client.chat(messages)
+        # 传递 max_tokens 参数以确保完整响应
+        max_tokens = self.ai_config.get("MAX_TOKENS", 5000)
+        return self.client.chat(messages, max_tokens=max_tokens)
 
     def _format_time_range(self, first_time: str, last_time: str) -> str:
         """格式化时间范围（简化显示，只保留时分）"""
@@ -517,41 +543,58 @@ class AIAnalyzer:
 
     def _parse_response(self, response: str) -> AIAnalysisResult:
         """解析 AI 响应"""
+        import re
+
         result = AIAnalysisResult(raw_response=response)
 
         if not response or not response.strip():
             result.error = "AI 返回空响应"
             return result
 
+        json_str = None
         try:
-            json_str = response
-
+            # 第一步：提取 JSON 代码块
             if "```json" in response:
                 parts = response.split("```json", 1)
                 if len(parts) > 1:
                     code_block = parts[1]
                     end_idx = code_block.find("```")
                     if end_idx != -1:
-                        json_str = code_block[:end_idx]
+                        json_str = code_block[:end_idx].strip()
                     else:
-                        json_str = code_block
+                        json_str = code_block.strip()
             elif "```" in response:
                 parts = response.split("```", 2)
                 if len(parts) >= 2:
-                    json_str = parts[1]
+                    json_str = parts[1].strip()
 
-            json_str = json_str.strip()
+            # 如果没有找到代码块，尝试直接解析
+            if not json_str:
+                json_str = response.strip()
+
             if not json_str:
                 raise ValueError("提取的 JSON 内容为空")
 
+            # 第二步：尝试解析 JSON
+            # 注意：中文引号在 JSON 字符串内容里是合法字符，不能全局替换成英文引号。
+            # 否则模型输出的正文引用会被误变成未转义的 JSON 定界符，导致字段被截断。
             data = json.loads(json_str)
 
+            def as_text(value: Any) -> str:
+                if value is None:
+                    return ""
+                if isinstance(value, str):
+                    return value
+                if isinstance(value, (dict, list)):
+                    return json.dumps(value, ensure_ascii=False)
+                return str(value)
+
             # 新版字段解析
-            result.core_trends = data.get("core_trends", "")
-            result.sentiment_controversy = data.get("sentiment_controversy", "")
-            result.signals = data.get("signals", "")
-            result.rss_insights = data.get("rss_insights", "")
-            result.outlook_strategy = data.get("outlook_strategy", "")
+            result.core_trends = as_text(data.get("core_trends", ""))
+            result.sentiment_controversy = as_text(data.get("sentiment_controversy", ""))
+            result.signals = as_text(data.get("signals", ""))
+            result.rss_insights = as_text(data.get("rss_insights", ""))
+            result.outlook_strategy = as_text(data.get("outlook_strategy", ""))
 
             # 解析独立展示区概括
             summaries = data.get("standalone_summaries", {})
@@ -559,24 +602,222 @@ class AIAnalyzer:
                 result.standalone_summaries = {
                     str(k): str(v) for k, v in summaries.items()
                 }
-            
+
+            has_content = any(
+                getattr(result, field_name, "").strip()
+                for field_name in (
+                    "core_trends",
+                    "sentiment_controversy",
+                    "signals",
+                    "rss_insights",
+                    "outlook_strategy",
+                )
+            ) or any(str(v).strip() for v in result.standalone_summaries.values())
+            combined_content = "\n".join(
+                value for value in (
+                    result.core_trends,
+                    result.sentiment_controversy,
+                    result.signals,
+                    result.rss_insights,
+                    result.outlook_strategy,
+                    "\n".join(str(v) for v in result.standalone_summaries.values()),
+                ) if value
+            )
+            prompt_markers = (
+                "提示词配置文件",
+                "用于指导AI分析",
+                "用于指导 AI 分析",
+                "我已理解你的需求",
+            )
+            if any(marker in combined_content for marker in prompt_markers):
+                result.error = "AI 响应疑似提示词说明文本，已拒绝作为分析报告展示"
+                return result
+
+            if not has_content:
+                result.error = "AI 响应 JSON 中没有可展示的分析内容"
+                return result
+
             result.success = True
+            return result
 
         except json.JSONDecodeError as e:
-            error_context = json_str[max(0, e.pos - 30):e.pos + 30] if json_str and e.pos else ""
-            result.error = f"JSON 解析错误 (位置 {e.pos}): {e.msg}"
+            # JSON 解析失败，尝试使用正则表达式提取字段
+            if json_str:
+                try:
+                    # 使用相邻字段边界提取每个字段的值。
+                    # 这比“遇到第一个英文引号就停止”更稳，可以容忍正文里出现未转义引号。
+                    extracted = {}
+                    field_order = [
+                        "core_trends",
+                        "sentiment_controversy",
+                        "signals",
+                        "rss_insights",
+                        "outlook_strategy",
+                        "standalone_summaries",
+                    ]
+
+                    def decode_jsonish_string(value: str) -> str:
+                        value = value.strip()
+                        try:
+                            return json.loads(f'"{value}"')
+                        except Exception:
+                            return (
+                                value
+                                .replace("\\n", "\n")
+                                .replace("\\t", "\t")
+                                .replace('\\"', '"')
+                                .replace("\\/", "/")
+                            )
+
+                    def extract_string_field(source: str, field: str, following_fields: List[str]) -> str:
+                        key_pattern = rf'["“]{re.escape(field)}["”]\s*:\s*["“]'
+                        key_match = re.search(key_pattern, source, re.DOTALL)
+                        if not key_match:
+                            return ""
+
+                        start = key_match.end()
+                        end_candidates = []
+                        for following_field in following_fields:
+                            boundary_pattern = (
+                                rf'["”]\s*,\s*["“]{re.escape(following_field)}["”]\s*:'
+                            )
+                            boundary_match = re.search(boundary_pattern, source[start:], re.DOTALL)
+                            if boundary_match:
+                                end_candidates.append(start + boundary_match.start())
+
+                        if not end_candidates:
+                            tail_match = re.search(r'["”]\s*}\s*$', source[start:], re.DOTALL)
+                            if tail_match:
+                                end_candidates.append(start + tail_match.start())
+
+                        if not end_candidates:
+                            return ""
+
+                        return decode_jsonish_string(source[start:min(end_candidates)])
+
+                    for index, field_name in enumerate(field_order[:-1]):
+                        value = extract_string_field(
+                            json_str,
+                            field_name,
+                            field_order[index + 1:],
+                        )
+                        if value:
+                            extracted[field_name] = value
+
+                    # 如果至少提取了一个非空字段，使用提取的数据
+                    if any(value.strip() for value in extracted.values()):
+                        result.core_trends = extracted.get('core_trends', '')
+                        result.sentiment_controversy = extracted.get('sentiment_controversy', '')
+                        result.signals = extracted.get('signals', '')
+                        result.rss_insights = extracted.get('rss_insights', '')
+                        result.outlook_strategy = extracted.get('outlook_strategy', '')
+
+                        # 尝试提取 standalone_summaries
+                        try:
+                            match = re.search(r'"standalone_summaries"\s*:\s*({.*?})\s*}', json_str, re.DOTALL)
+                            if match:
+                                summaries_str = match.group(1)
+                                summaries = json.loads(summaries_str)
+                                if isinstance(summaries, dict):
+                                    result.standalone_summaries = {str(k): str(v) for k, v in summaries.items()}
+                        except Exception:
+                            pass
+
+                        if any(
+                            getattr(result, field_name, "").strip()
+                            for field_name in (
+                                "core_trends",
+                                "sentiment_controversy",
+                                "signals",
+                                "rss_insights",
+                                "outlook_strategy",
+                            )
+                        ) or any(str(v).strip() for v in result.standalone_summaries.values()):
+                            combined_content = "\n".join(
+                                value for value in (
+                                    result.core_trends,
+                                    result.sentiment_controversy,
+                                    result.signals,
+                                    result.rss_insights,
+                                    result.outlook_strategy,
+                                    "\n".join(str(v) for v in result.standalone_summaries.values()),
+                                ) if value
+                            )
+                            prompt_markers = (
+                                "提示词配置文件",
+                                "用于指导AI分析",
+                                "用于指导 AI 分析",
+                                "我已理解你的需求",
+                            )
+                            if any(marker in combined_content for marker in prompt_markers):
+                                result.error = "AI 响应疑似提示词说明文本，已拒绝作为分析报告展示"
+                                return result
+
+                            result.success = True
+                            return result
+
+                except Exception as regex_error:
+                    pass
+
+            # 如果正则表达式也失败了，尝试从 markdown 代码块中再次提取 JSON
+            if "```json" in json_str:
+                try:
+                    parts = json_str.split("```json", 1)
+                    if len(parts) > 1:
+                        nested_block = parts[1]
+                        end_idx = nested_block.find("```")
+                        if end_idx != -1:
+                            nested_json = nested_block[:end_idx].strip()
+                        else:
+                            nested_json = nested_block.strip()
+
+                        # 再次尝试用正则表达式提取
+                        extracted = {}
+
+                        match = re.search(r'"core_trends"\s*:\s*"((?:[^"\\]|\\.)*)"', nested_json, re.DOTALL)
+                        if match:
+                            extracted['core_trends'] = match.group(1)
+
+                        match = re.search(r'"sentiment_controversy"\s*:\s*"((?:[^"\\]|\\.)*)"', nested_json, re.DOTALL)
+                        if match:
+                            extracted['sentiment_controversy'] = match.group(1)
+
+                        match = re.search(r'"signals"\s*:\s*"((?:[^"\\]|\\.)*)"', nested_json, re.DOTALL)
+                        if match:
+                            extracted['signals'] = match.group(1)
+
+                        match = re.search(r'"rss_insights"\s*:\s*"((?:[^"\\]|\\.)*)"', nested_json, re.DOTALL)
+                        if match:
+                            extracted['rss_insights'] = match.group(1)
+
+                        match = re.search(r'"outlook_strategy"\s*:\s*"((?:[^"\\]|\\.)*)"', nested_json, re.DOTALL)
+                        if match:
+                            extracted['outlook_strategy'] = match.group(1)
+
+                        if any(value.strip() for value in extracted.values()):
+                            result.core_trends = extracted.get('core_trends', '')
+                            result.sentiment_controversy = extracted.get('sentiment_controversy', '')
+                            result.signals = extracted.get('signals', '')
+                            result.rss_insights = extracted.get('rss_insights', '')
+                            result.outlook_strategy = extracted.get('outlook_strategy', '')
+
+                            result.success = True
+                            return result
+                except Exception:
+                    pass
+
+            # 所有方法都失败了，记录错误
+            error_context = json_str[max(0, e.pos - 30):e.pos + 30] if json_str and hasattr(e, 'pos') and e.pos else ""
+            result.error = f"JSON 解析错误: {e.msg if hasattr(e, 'msg') else str(e)}"
             if error_context:
                 result.error += f"，上下文: ...{error_context}..."
-            # 使用原始响应填充 core_trends，确保有输出
-            result.core_trends = response[:3000] + "..." if len(response) > 3000 else response
-            result.success = True
+            result.error += "。AI 原始回复不是有效 JSON，已拒绝将其作为分析报告展示"
+            return result
+
         except (IndexError, KeyError, TypeError, ValueError) as e:
             result.error = f"响应解析错误: {type(e).__name__}: {str(e)}"
-            result.core_trends = response[:3000] + "..." if len(response) > 3000 else response
-            result.success = True
+
         except Exception as e:
             result.error = f"解析时发生未知错误: {type(e).__name__}: {str(e)}"
-            result.core_trends = response[:3000] + "..." if len(response) > 3000 else response
-            result.success = True
 
         return result
